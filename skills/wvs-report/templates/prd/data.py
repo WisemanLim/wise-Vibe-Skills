@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """PRD 공통 데이터 — 제품 정보, GitHub 실측(repos.tsv), 카탈로그(repos_catalog.tsv), 사용자 스타·저장소. wvs-report prd 템플릿.
-{ } 값은 기초 보고서·첨부 이미지에서 자동 추출해 채운다."""
+{ } 값은 입력(분석 보고서·요구사항/개발방향 문서·첨부 이미지·참고 URL·요청문 — research/inputs.json)에서 자동 추출해 채운다.
+해당 입력이 없으면 빈 문자열로 둔다(표지·1장은 있는 값만 쓴다)."""
 import csv, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.path.join(HERE, "research")
 OUT_DIR = os.path.dirname(HERE)                                   # <root>/Need-to-be-organized-into-PRD
-SYSTEM = "{Brand}"                                                # 제품명(원본 핵심 문구를 드러내는 짧은 브랜드)
+SYSTEM = "{Brand}"                                                # 제품명(핵심 문구·요구사항 문서의 비전/제목을 드러내는 짧은 브랜드)
 FILE_STEM = "{Brand}_{Core-Phrase-Slug}_PRD"                      # 예: ProdAI-Atlas_The-Map-Behind-Production-AI-Systems_PRD
 SUBTITLE = "{원본 핵심 문구} — {N 레이어 · M 개념} 마이크로 에이전트 플랫폼 제품 요구사항 정의서 (PRD)"
-SRC_TXT = "{인포그래픽 원제} — {핵심 문구} ({원저작자})"            # 원본 도식 표기
-BASE_REPORT = "{기초 분석 보고서 파일명(확장자 제외)}"
+SRC_TXT = "{인포그래픽 원제} — {핵심 문구} ({원저작자})"            # 구조 원천 도식 표기(도식 이미지가 없으면 "")
+BASE_REPORT = "{기초 분석 보고서 파일명(확장자 제외)}"              # 분석 보고서 입력이 없으면 ""
+REQ_DOCS = "{요구사항·개발방향 문서 제목들}"                         # 요구사항 문서 입력이 없으면 ""
 GITHUB_USER = "{WisemanLim}"
 VERSION = "v1.0"
 

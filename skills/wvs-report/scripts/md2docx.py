@@ -131,6 +131,10 @@ def render(r, text, size=9.2, sub_level=None, code_max=40):
             i += 1; continue
         if not s or s == "---":
             flush(); i += 1; continue
+        if s.startswith("<!--"):                      # HTML 주석(작성 안내)은 렌더하지 않는다
+            flush()
+            while i < n and "-->" not in lines[i]: i += 1
+            i += 1; continue
         para.append(s)
         i += 1
     flush()

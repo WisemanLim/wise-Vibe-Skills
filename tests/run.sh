@@ -39,4 +39,5 @@ W=skills/wvs-tools/scripts/wvs
 PY="${WVS_TEST_PY:-}"
 if [ -z "$PY" ]; then PY="$(bash skills/wvs-report/scripts/setup_env.sh "$H/venv" | tail -1)"; fi
 "$PY" tests/smoke_kit.py >/dev/null && pass "wvs-report kit smoke build (docx/pptx/pdf + check_report)"
+"$PY" tests/smoke_prd.py >/dev/null && pass "wvs-report prd smoke (multi-input intake · RQ trace · gates pass/fail)"
 echo "ALL TESTS PASSED"

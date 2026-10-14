@@ -9,7 +9,7 @@ Installs into Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, 
 | Skill | What it does | Example (Claude Code) |
 |---|---|---|
 | **`wvs-review`** | Repository review by **level** — L1 structure · L2 +commercial (licenses, security, ISO 5230) · L3 +junior/implementation guides · L4 +line-by-line code review; bulk analysis of a GitHub star list | `/wvs-review ./proj --level 2` |
-| **`wvs-report`** | Reports and PRDs by **mode** — `repos` (clone + Summary-Repos) · `deep` (in-depth analysis of an attached diagram) · `prd` (PRD + UI design deck from an analysis report) → docx/pdf | `/wvs-report deep` (attach an image) |
+| **`wvs-report`** | Reports and PRDs by **mode** — `repos` (clone + Summary-Repos) · `deep` (in-depth analysis of an attached diagram) · `prd` (PRD + UI design deck from reports, requirement docs, images and links) → docx/pdf | `/wvs-report deep` (attach an image) |
 | **`wvs-tools`** | A **single CLI** `wvs` — pdf · archive · clean · bookmarks · deploy ios/android · dist · doctor | `wvs pdf REPORT.md` |
 
 Generated documents are written in Korean by default (with English where useful), matching the house report templates; prompts can be given in any language.
@@ -81,7 +81,7 @@ npx works for a private repository only when git can authenticate (`gh auth setu
 | `--skills <list>` | all | Subset of `wvs-review,wvs-report,wvs-tools` |
 | `--bin-dir <dir>` | — | Symlink the `wvs` CLI (e.g. `~/.local/bin`) |
 | `--desktop-zip [dir]` | `~/Downloads/wise-vibe-skills-desktop` | Build Claude Desktop upload zips (automatic when Claude Desktop is selected) |
-| `--ref <tag>` | `main` | Branch or tag to install (e.g. `v0.2.0`) |
+| `--ref <tag>` | `main` | Branch or tag to install (e.g. `v0.3.0`) |
 | `--link` · `--source <path>` | — | Symlink/copy from a local checkout (development) |
 | `--force` | — | Also overwrite same-named folders this installer did not create |
 | `--dry-run` · `--list` · `--uninstall` · `-y` | — | Plan only · list/detection · remove · no prompts |
@@ -108,7 +108,7 @@ For an agent that is not listed, use `--dir <that agent's skills folder>`.
 
 ### 2.4 Update / uninstall
 ```bash
-# Update = run the installer again (replaces the previous install). Pin a version with --ref v0.2.0
+# Update = run the installer again (replaces the previous install). Pin a version with --ref v0.3.0
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- -y
 # Uninstall (including the wvs link)
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --uninstall --bin-dir ~/.local/bin -y
@@ -168,7 +168,7 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 |---|---|---|---|
 | `repos` | Infographic listing tools (image/link) | `<root>/<Project>/NN-Category/Tool/` (shallow clones) + `Summary-Repos.docx/.pdf` | transcribe → map to GitHub (follows moved repos) → measure (stars, SPDX, releases, registries) → clone + trees → per-repo research → comparison, selection guide, infographic check |
 | `deep` | Diagram of categories / packages / concepts | `<root>/Miscellaneous-Data/<title>.docx/.pdf` + `<title>_assets/` | transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
-| `prd` | Analysis report docx/pdf (+ `_assets/`) | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | every diagram item → an independently deployable micro-agent → FRs (`FR-<unit>-NN`) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
+| `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
 
 ### 4.2 `{ }` and `[ ]` in prompts
 `{ }` marks values **extracted automatically** from the attachment (title, project name, document name, categories); `[ ]` marks detailed requirements **derived automatically** from it, which shape the classification, analysis axes, chapters, FRs and screens. Values you give explicitly take precedence.
@@ -185,9 +185,30 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 
 /wvs-report prd "9AI-Concepts-That-Put-You-Ahead-of-99%-in-2026" --github-user WisemanLim
   Derive requirements from the {analysis report} → PRD named after {'The map behind production AI Systems'} (+ UI design deck; --ui-pptx false to skip)
+
+/wvs-report prd docs/requirements.md ui-mock-1.png ui-mock-2.png https://www.bizinfo.go.kr https://github.com/langgenius/dify
+  PRD covering every requirement item of the {requirements/direction doc} + UI mock-ups + reference sites and repos (works without an analysis report)
+
+/wvs-report prd "9AI-Concepts-That-Put-You-Ahead-of-99%-in-2026" direction.md --links refs.txt
+  analysis report + direction doc + a list of reference links (one URL per line) together
 ```
 
-### 4.3 Shared rules
+### 4.3 `prd` inputs — mix several kinds
+| Input | Example | Used for |
+|---|---|---|
+| Analysis report `.docx`/`.pdf` (+ `<name>_assets/`) | output of `deep` mode | reuse research notes, verified repositories and the source diagram; consider every derived stack |
+| Requirements / direction doc `.md`·`.txt`·`.rst` (`.docx`/`.pdf` with `--req`) | `requirements.md`, `direction.md`, a PRD draft | requirement items **RQ-NNN** extracted automatically (functional, UI, non-functional, constraint, goal, non-goal) → every functional, UI, non-functional and constraint RQ is **traced to FRs / NFRs / chapters** (build fails if any is missing) |
+| Attached images `.png`·`.jpg`·`.webp`·`.svg`, image URLs | infographic, architecture diagram, UI mock-up, competitor screenshot | diagram → canonical source of units and information architecture / mock-up → screens and layout / quoted in 1.2 with credit |
+| Reference site URLs | similar or competing products, public services, docs | feature lists, menu structure, UI patterns, pricing/licensing (chapters 4 and 15). No copying of text or images; URL and access date are cited |
+| GitHub repository URLs | `https://github.com/owner/repo` | measured (stars, SPDX, activity) + README → reference OSS and integration mode (chapter 16) |
+| Prompt | numbered items 1–6 · * · ** | RQs and the 1.1 user-requirement table |
+
+- Pass files, folders and URLs together as positional arguments, or use `--req` · `--report` · `--image` · `--url` · `--links <urls.txt>`. Images and links attached to the conversation are inputs too.
+- The first step runs `scripts/prd_intake.py`: it classifies and preserves inputs (`<Brand>_assets/inputs/IN-NN.*`) and writes `research/inputs.json`, `_INPUTS.md` (per-input transcription/summary slots) and `req_items.tsv` (RQ candidates). The agent then reads each input, fills the summaries and reviews the RQs (merge, split, fix types).
+- Precedence on conflicts: prompt > requirements doc > analysis report / diagram > images (mock-ups) > reference sites. Conflicts and decisions are recorded in PRD 3.4.
+- Added to the PRD: 2.1 input inventory, chapter 3 input analysis (per-input summary · RQ list · unit catalogue · conflicts and decisions), 21.4 RQ → FR / NFR / chapter traceability. New build gates: **0 unmapped RQs · 0 unsummarized inputs**.
+
+### 4.4 Shared rules
 - Sources, licenses and referenced images are always cited (figure captions, stars + SPDX for repositories, source and figure appendices).
 - **Previous documents used only as a format template are never cited** — checked after the build with `check_report.py --forbid`.
 - Unverified facts are marked `[미확인]` (unverified); repositories and papers that cannot be verified are left out (`gh_probe.py`, `verify_sources.py`).
@@ -229,7 +250,7 @@ If your agent or service already ships a similar built-in feature, you can use i
 | `wvs-review` L4 code | Claude Code `/review` and `code-review` skill · Codex `/review` · Copilot CLI `/review` · Cursor `/review` (Bugbot, 3.7+) · Gemini CLI code-review extension · GitHub PR review | **Partly** | Built-ins find **defects in a diff**. L4 writes an **educational/handover walkthrough of the whole code base at reader level R0–R4**. For PR gates prefer the built-ins |
 | `wvs-review --stars` | none | **No** | Bulk, incremental analysis of hundreds to thousands of starred repos |
 | `wvs-report repos` / `deep` | Claude **Research** · Gemini **Deep Research** and similar web research reports | **Partly (research step)** | A research summary alone is replaceable. **Cloning, directory trees, GitHub/registry/arXiv verification, diagram verdicts and the house docx/pdf template** are only in wvs-report |
-| `wvs-report prd` | PRD template skills/plugins · Anthropic `docx`/`pptx` skills (document format) | **Partly** | A generic PRD draft is replaceable. **Diagram → micro-agent decomposition, 100 % FR↔screen traceability gates, stars/repos cross-check and the UI design deck** are only in wvs-report prd |
+| `wvs-report prd` | PRD template skills/plugins · Anthropic `docx`/`pptx` skills (document format) | **Partly** | A generic PRD draft is replaceable. **Diagram → micro-agent decomposition, 100 % requirement-doc RQ↔FR and FR↔screen traceability gates, merging several inputs (docs, mock-ups, reference links), stars/repos cross-check and the UI design deck** are only in wvs-report prd |
 | `wvs-tools archive` · `clean` | `tar` · `find … -delete` | **Yes** | Use `wvs` for excludes, splitting and dry-run in one command |
 | `wvs-tools bookmarks` | Browser extensions, manual cleanup | **Yes** | Use `wvs` to keep folder structure with backup and dry-run |
 | `wvs-tools deploy` | fastlane (`pilot`, `supply`) · Xcode Cloud · Gradle Play Publisher | **Yes** | Keep your CI/CD if you have one; `wvs deploy` is a one-line local upload |
@@ -280,11 +301,11 @@ skills/
 ├── wvs-review/   SKILL.md · references/{structure,commercial,guide,code,bulk-stars}.md
 ├── wvs-report/   SKILL.md · references/{repos,deep,prd,kit,…}.md · scripts/ (docx engine, verification, cloning, wireframes, pptx, checks) · templates/{repos,deep,prd}/
 └── wvs-tools/    SKILL.md · references/{pdf,scripts,dist}.md · scripts/wvs · scripts/lib/*.sh
-tests/                           run.sh · validate_skills.py · smoke_kit.py
+tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_prd.py
 ```
 
 - **Design**: each `SKILL.md` is a short router (level, mode, task); detailed procedures in `references/` are read only when that part runs, keeping context small.
-- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch and a report-toolkit smoke build (docx/pptx/pdf). Reuse a venv with `WVS_TEST_PY=<venv python>`.
+- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf) and a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing). Reuse a venv with `WVS_TEST_PY=<venv python>`.
 - **Kept out of the repo**: `.gitignore` excludes OS files (.DS_Store, Thumbs.db), personal environments (.vscode, .idea, *.code-workspace, .env, .venv), agent sessions and conversation logs (.claude/, .codex/, .gemini/, .cursor/, .omc/, *.jsonl, sessions/), review/report outputs (.review/) and signing material (*.p8, *.keystore, service-account JSON). `.gitattributes` pins LF line endings for shell scripts.
 - **Release**: bump `VERSION`, `package.json`, `.claude-plugin/*.json` and `VERSION` inside `wvs` together → `bash tests/run.sh` → commit → `git tag vX.Y.Z && git push --tags` → (optional) `npm publish`.
 

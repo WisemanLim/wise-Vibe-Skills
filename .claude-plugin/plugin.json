@@ -1,6 +1,6 @@
 {
   "name": "wise-vibe-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "wvs-review (repo review by level) · wvs-report (Summary-Repos / deep analysis / PRD) · wvs-tools (wvs CLI).",
   "author": {
     "name": "Wiseman Lim"

@@ -1,6 +1,6 @@
 ---
 name: wvs-report
-description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 도식의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, Miscellaneous-Data/<제목>.docx, 구 attachment-deep-analysis) · prd(분석 보고서 기반 요구사항·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서 기반 PRD'."
+description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 도식의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, Miscellaneous-Data/<제목>.docx, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
 ---
 
 # wvs-report — 보고서·PRD 생성 (repos · deep · prd)
@@ -15,9 +15,10 @@ Arguments: $ARGUMENTS
 |---|---|---|---|---|
 | `repos` | 인포그래픽 이미지·링크(도구 목록) | `<root>/<Project>/NN-분류/도구/`(clone) + `Summary-Repos.docx/.pdf` | "clone", "Summary-Repos", 도구 로고 목록 | `references/repos.md` |
 | `deep` | 인포그래픽·도식 이미지·링크 | `<root>/Miscellaneous-Data/<제목>.docx/.pdf` + `<제목>_assets/` | "상세 분석", "보고서", 범주·패키지 비교 도식 | `references/deep.md` |
-| `prd` | 분석 보고서 docx/pdf(+ `_assets/`) | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | "PRD", 보고서 파일 지정 | `references/prd.md` |
+| `prd` | 다중 입력 — 분석 보고서 docx/pdf(+ `_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지(도식·UI 시안·캡처) · 참고 사이트·GitHub URL · 요청문 (하나 이상, 섞어서) | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | "PRD", 요구사항 md·보고서 파일 지정 | `references/prd.md` |
 
 흐름 연결: `deep` 결과(보고서 + `_assets/research`) → `prd` 의 입력. `repos` 결과도 `prd` 기초 자료로 쓸 수 있다.
+`prd` 는 입력을 먼저 `scripts/prd_intake.py` 로 분류·보존하고 요구사항 문서에서 RQ 를 뽑는다 — 분석 보고서 없이 요구사항 md·이미지·링크만으로도 동작한다.
 
 ## 2. 공통 인수
 | 인수 | 기본값 | 의미 |
@@ -26,7 +27,7 @@ Arguments: $ARGUMENTS
 | `--template <docx>` | 루트의 최근 같은 유형 문서 | 형식 참고(출처에 넣지 않음) |
 | `--no-pdf` | false | PDF 변환 생략 |
 | `--plan-only` | false | 전사·조사 사양(_SPEC.md)·카탈로그까지만 만들고 정지 |
-모드별 옵션(`--project`·`--categories` / `--title`·`--axes`·`--experiment` / `--name`·`--github-user`·`--similar`·`--extra`·`--ui-pptx`)은 각 reference 의 인수 표.
+모드별 옵션(`--project`·`--categories` / `--title`·`--axes`·`--experiment` / `--req`·`--image`·`--url`·`--links`·`--name`·`--github-user`·`--similar`·`--extra`·`--ui-pptx`)은 각 reference 의 인수 표.
 
 ## 3. `{ }` 와 `[ ]` — 자동 추출·도출 규칙
 - `{ }` = 첨부 이미지·링크·기초 보고서에서 **자동 추출**: 제목·프로젝트명·문서명·범주·항목·원저작자. 사용자가 값을 주면 그 값이 우선.
@@ -51,6 +52,8 @@ Arguments: $ARGUMENTS
 /wvs-report repos --categories "Model & Data Security, Data Visualization"
 /wvs-report deep --root ~/wise-Analysis-Repos --title "OCR+PDF Extractors"   (도식 첨부)
 /wvs-report prd "9AI-Concepts-That-Put-You-Ahead-of-99%-in-2026" --github-user WisemanLim
+/wvs-report prd docs/requirements.md ui-mock-1.png ui-mock-2.png https://www.bizinfo.go.kr https://github.com/langgenius/dify
+/wvs-report prd direction.md --links refs.txt --name GovScout                (보고서 없이 요구사항 문서 + 참고 링크)
 ```
 
 ## 7. 구 커맨드 대응
