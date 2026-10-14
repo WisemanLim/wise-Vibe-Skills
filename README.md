@@ -31,7 +31,7 @@ Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, Devin, OpenCod
 ## 1. 빠른 시작
 
 ```bash
-# 1) 설치 — 감지된 에이전트 전부 + 터미널용 wvs CLI 링크
+# 1) 설치 — 감지된 에이전트 전부 + 터미널용 wvs CLI 링크  (저장소가 비공개면 2.1 의 gh api 명령 사용)
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --bin-dir ~/.local/bin
 
 # 2) 실행 중인 에이전트를 새 세션으로 다시 시작
@@ -59,7 +59,16 @@ wvs pdf docs/REPORT.md                    # 터미널: Mermaid 포함 Markdown �
 | **Claude Desktop(채팅)** | `npx wise-vibe-skills zip` 또는 `install.sh --desktop-zip` → Settings › Capabilities › Skills 에서 `<skill>.zip` 업로드 | Desktop 채팅. 코드 실행 기능 활성화 필요 |
 | **수동** | `git clone` 후 `skills/<name>/` 폴더를 에이전트 스킬 폴더로 복사 | 오프라인·사내망 |
 
-저장소가 비공개인 동안에는 `gh auth login` 상태에서 같은 `curl … | bash` 명령이 `gh api` 로 내려받는다.
+**저장소가 비공개(private)이면** `raw.githubusercontent.com` 이 토큰 없는 `curl` 에 404 를 돌려준다(`gh auth login` 은 curl 에 적용되지 않음). 이때는 GitHub CLI 로 설치 스크립트를 받는다 — 스크립트가 본체도 `gh api` 로 내려받는다:
+
+```bash
+gh auth login        # 저장소 접근 권한이 있는 계정
+gh api -H "Accept: application/vnd.github.raw" repos/WisemanLim/wise-Vibe-Skills/contents/install.sh | bash -s -- --bin-dir ~/.local/bin
+# 또는
+gh repo clone WisemanLim/wise-Vibe-Skills && cd wise-Vibe-Skills && ./install.sh --bin-dir ~/.local/bin
+```
+
+비공개 상태의 npx 는 git 이 인증될 때만 동작한다(`gh auth setup-git` 후 `npx github:WisemanLim/wise-Vibe-Skills install`). 모든 사용자가 `curl … | bash` 한 줄로 설치하게 하려면 저장소를 공개(public)로 전환한다.
 
 ### 2.2 설치 스크립트 옵션 (npx 도 동일)
 | 옵션 | 기본값 | 설명 |
@@ -249,7 +258,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | 증상 | 해결 |
 |---|---|
 | 스킬이 목록에 안 보임 | 에이전트를 **새 세션**으로 재시작. `npx wise-vibe-skills doctor` 로 설치 위치 확인. 목록에 없는 에이전트는 `--dir` |
-| `curl … install.sh` 404 | 저장소가 비공개·미배포 상태. `gh auth login` 후 재실행하거나 `git clone` 후 `./install.sh` |
+| `curl … install.sh` 404 | 저장소가 비공개(또는 미배포). curl 은 gh 인증을 쓰지 않는다 → 2.1 의 `gh api … install.sh \| bash` 또는 `gh repo clone` 후 `./install.sh` |
 | `/analysis-source` 등 구 커맨드가 중복 표시 | `~/.claude/commands/<구 이름>.md` 를 직접 삭제(설치기는 경고만 함) |
 | `wvs-report/scripts 를 찾을 수 없습니다` | 빌드 스크립트가 툴킷을 못 찾음 → `export WVS_KIT=<스킬폴더>/wvs-report/scripts` |
 | GitHub 실측이 느리거나 실패 | `gh auth login`(인증 시 시간당 5,000회). 미인증 익명 API 는 시간당 60회 |

@@ -6,6 +6,7 @@ set -euo pipefail
 #   curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --client claude-code,codex
 #   ./install.sh --list | --dry-run | --uninstall | --scope project | --desktop-zip | --bin-dir ~/.local/bin
+#   private repo: gh api -H "Accept: application/vnd.github.raw" repos/WisemanLim/wise-Vibe-Skills/contents/install.sh | bash -s -- [options]
 # Skill roots follow the client registry used by REA (github.com/morluto/rea, SupportedClients.ts):
 #   Claude Code → ${CLAUDE_CONFIG_DIR:-~/.claude}/skills · Antigravity → ~/.gemini/config/skills · Gemini CLI → ${GEMINI_CLI_HOME:-~}/.agents/skills
 #   Codex · Cursor · Windsurf · Devin · OpenCode · Copilot CLI · Command Code · Grok Build · OMP · VS Code → ~/.agents/skills (shared)
@@ -152,8 +153,8 @@ resolve_source() {
   [ "$mode" = "link" ] && die "--link needs a local checkout (--source)"
   cleanup_tmp="$(mktemp -d)"
   say "downloading $REPO@$REF ..."
-  if curl -fsSL --proto '=https' --tlsv1.2 --retry 3 "https://codeload.github.com/$REPO/tar.gz/$REF" | tar -xz -C "$cleanup_tmp" 2>/dev/null; then :
-  elif has_cmd gh && gh api "repos/$REPO/tarball/$REF" > "$cleanup_tmp/src.tgz" 2>/dev/null && tar -xzf "$cleanup_tmp/src.tgz" -C "$cleanup_tmp"; then :   # private repo via gh auth
+  if curl -fsSL --proto '=https' --tlsv1.2 --retry 3 "https://codeload.github.com/$REPO/tar.gz/$REF" 2>/dev/null | tar -xz -C "$cleanup_tmp" 2>/dev/null; then :
+  elif has_cmd gh && say "public download unavailable — trying gh api (private repo)" && gh api "repos/$REPO/tarball/$REF" > "$cleanup_tmp/src.tgz" 2>/dev/null && tar -xzf "$cleanup_tmp/src.tgz" -C "$cleanup_tmp"; then :
   elif has_cmd git && git clone -q --depth 1 --branch "$REF" "https://github.com/$REPO.git" "$cleanup_tmp/repo" 2>/dev/null; then :
   else die "could not download $REPO@$REF (check network, --ref, or gh auth for a private repo)"; fi
   local d; source_dir=""

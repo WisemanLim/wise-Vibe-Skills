@@ -33,7 +33,7 @@ Generated documents are written in Korean by default (with English where useful)
 ## 1. Quick start
 
 ```bash
-# 1) Install for every detected agent and link the wvs CLI for your terminal
+# 1) Install for every detected agent and link the wvs CLI for your terminal  (private repo: use the gh api command in 2.1)
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --bin-dir ~/.local/bin
 
 # 2) Restart running agents (start a new session)
@@ -61,7 +61,16 @@ Agents pick skills from their `description`; every skill also reads its argument
 | **Claude Desktop (chat)** | `npx wise-vibe-skills zip` or `install.sh --desktop-zip`, then upload `<skill>.zip` in Settings › Capabilities › Skills | Desktop chat; code execution must be enabled |
 | **Manual** | `git clone`, then copy `skills/<name>/` into the agent's skills folder | Offline / restricted networks |
 
-While the repository is private, the same `curl … | bash` command downloads through `gh api` when `gh auth login` is done.
+**If the repository is private**, `raw.githubusercontent.com` answers an unauthenticated `curl` with 404 (`gh auth login` does not apply to curl). Fetch the installer through the GitHub CLI instead — it then downloads the skills through `gh api` as well:
+
+```bash
+gh auth login        # an account with access to the repository
+gh api -H "Accept: application/vnd.github.raw" repos/WisemanLim/wise-Vibe-Skills/contents/install.sh | bash -s -- --bin-dir ~/.local/bin
+# or
+gh repo clone WisemanLim/wise-Vibe-Skills && cd wise-Vibe-Skills && ./install.sh --bin-dir ~/.local/bin
+```
+
+npx works for a private repository only when git can authenticate (`gh auth setup-git`, then `npx github:WisemanLim/wise-Vibe-Skills install`). To let everyone install with the one-line `curl … | bash`, make the repository public.
 
 ### 2.2 Installer options (same for npx)
 | Option | Default | Description |
@@ -251,7 +260,7 @@ Old option names (`--review-result`, `--pdf true|false`, `-O`) are still accepte
 | Symptom | Fix |
 |---|---|
 | Skills do not show up | Restart the agent in a **new session**; check locations with `npx wise-vibe-skills doctor`; use `--dir` for unlisted agents |
-| `curl … install.sh` returns 404 | The repository is private or not published yet: run `gh auth login` and retry, or `git clone` and run `./install.sh` |
+| `curl … install.sh` returns 404 | The repository is private (or not published). curl does not use gh credentials → use `gh api … install.sh \| bash` from 2.1, or `gh repo clone` and `./install.sh` |
 | Old commands such as `/analysis-source` appear twice | Delete `~/.claude/commands/<old-name>.md` yourself (the installer only warns) |
 | `wvs-report/scripts 를 찾을 수 없습니다` (toolkit not found) | `export WVS_KIT=<skills>/wvs-report/scripts` |
 | GitHub measurements are slow or fail | `gh auth login` (5,000 requests/hour when authenticated vs. 60 anonymous) |
