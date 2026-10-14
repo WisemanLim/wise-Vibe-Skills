@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# wvs — wise-Vibe-Skills 통합 도구 CLI (구 ref-sh 스크립트 + convert-to-pdf 를 하나의 진입점으로)
+# Usage: wvs <task> [args...]   ·   wvs help [task]
+set -euo pipefail
+
+SELF="$0"
+while [ -L "$SELF" ]; do                      # ~/.local/bin/wvs 같은 심볼릭 링크 해석
+  t="$(readlink "$SELF")"; case "$t" in /*) SELF="$t" ;; *) SELF="$(dirname "$SELF")/$t" ;; esac
+done
+LIB="$(cd "$(dirname "$SELF")" && pwd)/lib"
+VERSION="0.2.0"
+
+die() { printf 'wvs: %s\n' "$*" >&2; exit 1; }
+run() { local s="$LIB/$1"; shift; [ -f "$s" ] || die "missing script: $s"; exec bash "$s" "$@"; }
+
+usage() {
+  cat <<'EOF'
+wvs — wise-Vibe-Skills 통합 도구 / unified tool CLI
+
+Usage: wvs <task> [args...]        wvs help <task> 로 해당 스크립트 도움말
+
+문서 / Documents
+  pdf <file.md|file.docx|file.pptx> [opts]   Markdown(+Mermaid) → PDF (pandoc+xelatex), docx/pptx → PDF (LibreOffice)
+                                             md 옵션: -C|--cleanup (중간 산출물 삭제)
+파일 / Files
+  archive [opts] <paths...>                  tar.gz 아카이브(제외 규칙·분할 --split·--dry-run·--remove)
+  clean   [opts] [dir]                       .DS_Store·__pycache__·Thumbs.db 등 OS 임시 파일 정리(--dry-run, -y)
+  bookmarks -i <Bookmarks> [opts]            Chrome 북마크 중복 제거(--mode folder|global, --in-place, --dry-run)
+배포 / Deploy
+  deploy ios <project> [--reconfigure|--reuse-archive]    iOS TestFlight 업로드(빌드 번호 +1)
+  deploy android <project> [--reconfigure]                Google Play 업로드(versionCode +1, fastlane)
+  dist [opts]                                표준 서비스 배포 부트스트랩 — TUI(기본) · --cli(비대화형) · --no-run
+  dist --classic -I "<repo urls>" [opts]     구 CLI 버전(dist-standard-service)
+기타 / Misc
+  doctor                                     필요 도구 점검(pandoc·xelatex·mmdc·soffice·gtar·python3·gh·docker)
+  list                                       작업 → 스크립트 매핑
+  version
+EOF
+}
+
+script_of() {
+  case "$1" in
+    pdf-md) echo convert2pdf.sh ;; pdf-office) echo docx2pdf.sh ;; archive) echo archive-tgz.sh ;;
+    clean) echo cleanup-meta.sh ;; bookmarks) echo chrome-bookmarks-dedup.sh ;;
+    deploy-ios) echo deploy-ios-testflight.sh ;; deploy-android) echo deploy-android-play.sh ;;
+    dist) echo dist-ss-tui.sh ;; dist-classic) echo dist-standard-service.sh ;;
+    *) return 1 ;;
+  esac
+}
+
+doctor() {
+  local c ok
+  printf 'wvs %s doctor (%s)\n' "$VERSION" "$(uname -s)"
+  for c in pandoc xelatex mmdc soffice gtar python3 gh git docker fastlane xcodebuild; do
+    ok="-- missing"
+    if command -v "$c" >/dev/null 2>&1; then ok="ok"
+    elif [ "$c" = soffice ] && [ -x /Applications/LibreOffice.app/Contents/MacOS/soffice ]; then ok="ok (app bundle)"
+    elif [ "$c" = xelatex ] && [ -x /Library/TeX/texbin/xelatex ]; then ok="ok (/Library/TeX/texbin)"; fi
+    printf '  %-10s %s\n' "$c" "$ok"
+  done
+  printf '\n  pdf(md): pandoc·xelatex·mmdc  pdf(docx/pptx): soffice  archive: gtar  bookmarks: python3\n  deploy ios: xcodebuild  deploy android: fastlane  dist: git·gh·docker\n'
+}
+
+task="${1:-help}"; [ $# -gt 0 ] && shift
+case "$task" in
+  pdf)
+    [ $# -ge 1 ] || die "usage: wvs pdf <file.md|file.docx|file.pptx> [-C]"
+    in=""; for a in "$@"; do case "$a" in -*) ;; *) in="$a"; break ;; esac; done
+    case "${in##*.}" in
+      md|markdown) has_i=false; for a in "$@"; do case "$a" in -I|--input|--input=*) has_i=true ;; esac; done
+                   if $has_i; then run convert2pdf.sh "$@"; else args=(); for a in "$@"; do [ "$a" = "$in" ] && args+=(-I "$a") || args+=("$a"); done; run convert2pdf.sh "${args[@]}"; fi ;;
+      docx|pptx|doc|ppt|odt|odp|xlsx) run docx2pdf.sh "$@" ;;
+      *) die "unsupported input: $in (md · docx · pptx)" ;;
+    esac ;;
+  archive|tgz) run archive-tgz.sh "$@" ;;
+  clean|cleanup) run cleanup-meta.sh "$@" ;;
+  bookmarks|dedup) run chrome-bookmarks-dedup.sh "$@" ;;
+  deploy)
+    target="${1:-}"; [ $# -gt 0 ] && shift
+    case "$target" in
+      ios) run deploy-ios-testflight.sh "$@" ;;
+      android) run deploy-android-play.sh "$@" ;;
+      *) die "usage: wvs deploy ios|android <project> [opts]" ;;
+    esac ;;
+  dist)
+    if [ "${1:-}" = "--classic" ]; then shift; run dist-standard-service.sh "$@"; fi
+    run dist-ss-tui.sh "$@" ;;
+  doctor) doctor ;;
+  list)
+    for t in pdf-md pdf-office archive clean bookmarks deploy-ios deploy-android dist dist-classic; do printf '  %-15s lib/%s\n' "$t" "$(script_of "$t")"; done ;;
+  version|-v|--version) echo "$VERSION" ;;
+  help|-h|--help)
+    if [ $# -ge 1 ]; then
+      case "$1" in
+        pdf) bash "$LIB/convert2pdf.sh" -h || true; echo; sed -n '2,4p' "$LIB/docx2pdf.sh" ;;
+        deploy) sed -n '1,20p' "$LIB/deploy-ios-testflight.sh"; sed -n '1,20p' "$LIB/deploy-android-play.sh" ;;
+        dist) bash "$LIB/dist-ss-tui.sh" -h || true ;;
+        *) s="$(script_of "$1")" || die "unknown task: $1"; bash "$LIB/$s" -h || true ;;
+      esac
+    else usage; fi ;;
+  *) usage; die "unknown task: $task" ;;
+esac

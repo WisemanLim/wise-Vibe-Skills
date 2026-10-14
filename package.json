@@ -1,0 +1,39 @@
+{
+  "name": "wise-vibe-skills",
+  "version": "0.2.0",
+  "description": "3 consolidated agent skills — wvs-review (repo review by level), wvs-report (Summary-Repos / deep analysis / PRD reports), wvs-tools (wvs CLI: pdf · archive · clean · bookmarks · deploy · dist) — for Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, Devin, OpenCode, Antigravity, GitHub Copilot CLI, Command Code, Grok Build, OMP and VS Code.",
+  "type": "module",
+  "bin": {
+    "wise-vibe-skills": "bin/wise-vibe-skills.mjs"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "install.sh",
+    "VERSION",
+    "README.md",
+    "README.en.md",
+    ".claude-plugin/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "bash tests/run.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WisemanLim/wise-Vibe-Skills.git"
+  },
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "skills",
+    "prd",
+    "report"
+  ],
+  "author": "Wiseman Lim"
+}

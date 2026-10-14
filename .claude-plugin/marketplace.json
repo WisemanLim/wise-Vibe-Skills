@@ -1,0 +1,15 @@
+{
+  "name": "wise-vibe-skills",
+  "owner": {
+    "name": "Wiseman Lim"
+  },
+  "description": "wise-Vibe-Skills — wvs-review (repo review by level), wvs-report (Summary-Repos / deep analysis / PRD with UI design), wvs-tools (wvs CLI).",
+  "plugins": [
+    {
+      "name": "wise-vibe-skills",
+      "source": "./",
+      "description": "wise-Vibe-Skills skill set for Claude Code (namespaced as /wise-vibe-skills:<skill>).",
+      "version": "0.2.0"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+# mode `deep` — 첨부 자료 상세 분석 보고서 (구 attachment-deep-analysis, 요청 유형 --2)
+
+
+> 인수 규칙·경로 변수(`SKILL_DIR`·`KIT`)는 `wvs-report` SKILL.md 를 따른다. `KIT` = `SKILL_DIR/scripts`.
+
+## 요청 원형과 자동화 규칙
+> 첨부이미지는 **{OCR+PDF Extractors}** 관련 문서로 **[Native PDF, OCR Engines, Document Parsers, VLM+Specialists 의 구성 및 세부 구성을 패키지(또는 라이브러리)를 비교하면서 상세한 내용]** 을 포함하여 도식화한 자료.
+> 관련 내용을 상세화하고 **[각 패키지의 정의, 소스repo, 설치/환경설정, 사용방법 및 동작방식 등까지 조사하여 사용 및 활용용도, 확장방안 등에 대응까지도 포함]** 한 분석 보고서를 작성.
+> 첨부이미지상의 자세한 도식화 자료를 기반으로 분석하며, 필요시 인터넷 검색으로 관련 논문·백서 등을 포함. 구현 관점은 github.com repo 를 확인해 참고.
+> 보고서는 'Miscellaneous-Data/OCR+PDF Extractors.docx' 로 생성하고 pdf 로 변환. 형식은 이전 보고서를 참고하되 출처 명시 시 형식 참고용은 제외.
+
+- `{ }` = **첨부에서 자동 추출**: 주제/대제목(→ 보고서 제목·파일명), 부제·원저작자·웹 주소, 범주 라벨과 순서.
+- `[ ]` = **첨부·요청에서 도출**: ① 구성 축 — 범주 → 세부 항목(패키지·라이브러리·개념 카드) 목록과 비교 관점(도식 푸터·말풍선이 말하는 차원 포함)
+  ② 분석 축 — 항목별 필수 소제목(정의·소스 저장소·설치·환경설정·사용방법·동작방식·성능·활용용도·확장방안·도식 판정). 요청문에 다른 축이 있으면 그것을 따른다.
+
+## 인수
+| 인수 | 기본값 | 의미 |
+|---|---|---|
+| 위치 인수 | (대화의 첨부) | 이미지 경로·URL — 여러 장이면 같은 주제로 합쳐 전사 |
+| `--root <dir>` | 현재 작업 디렉토리 | 작업 루트(예: wise-Analysis-Repos) |
+| `--out-dir <rel>` | `Miscellaneous-Data` | 출력 폴더(루트 기준) |
+| `--title <name>` | {첨부 대제목} | 보고서 제목 = 파일명(확장자 제외). 파일명 금지 문자 `/:` 만 치환 |
+| `--axes "<a, b, …>"` | [요청문에서 도출] | 항목별 분석 축을 명시적으로 지정 |
+| `--experiment` | false | 실측 실험 장 추가(도구를 격리 환경에 설치해 같은 입력으로 측정) |
+| `--template <docx>` | `<root>/<out-dir>/` 최근 보고서 | 형식 참고(출처에 넣지 않음) |
+| `--no-pdf` · `--plan-only` | false | PDF 생략 · 전사와 조사 사양(_SPEC.md)까지만 |
+
+## 산출물
+```
+<root>/<out-dir>/<Title>.docx / .pdf
+<root>/<out-dir>/<Title>_assets/
+├── source_infographic.png      ← 원본 첨부
+├── research/ _SPEC.md r1_*.md … rN_*.md   ← 조사 원문(블록 = 절)
+├── measured.json stats.py      ← 저장소·논문 검증(verify_sources.py)
+├── fig_*.png figs.py           ← 재구성·원리·비교 그림(자체 작성)
+├── sample/                     ← 참조 구현(실행 결과를 보고서에 인용)
+├── exp/                        ← (--experiment) 실측 실험 코드·결과
+├── report_config.py build_report.py p_*.py .venv/
+```
+
+## 절차
+`SKILL_DIR` = wvs-report 스킬 디렉토리, `KIT` = `SKILL_DIR/scripts`.
+
+### 1. 입력 확보와 전사 ({ } 자동 추출)
+1. 첨부를 `<Title>_assets/source_infographic.png` 로 저장(URL·게시물은 이미지 추출, 실패 시 사용자에게 파일 요청).
+2. 이미지를 직접 보고 **빠짐없이** 전사: 대제목·부제·작성자·웹 주소·푸터·말풍선·장식·크기(px), 범주(라벨 색·순서) → 항목(이름 — 주소/카드 문구/흐름/타일/불릿).
+3. 도식 유형 판정: **A 목록형**(패키지·도구 이름 + 주소) / **B 개념·아키텍처형**(레이어·카드·흐름도). 유형에 맞는 분석 축을 고른다(references/deep-research-spec.md).
+✅ 전사 항목 수 = 이미지 항목 수. 제목·범주·항목 수를 한 줄로 알리고 계속.
+
+### 2. 조사 사양 `_SPEC.md` 와 사전 실측
+1. 도식의 GitHub 주소(또는 찾은 공식 저장소)를 목록으로 `gh_probe.py` 실행 → 사전 실측 표(이전·아카이브·NOASSERTION 표기).
+2. `SKILL_DIR/references/deep-research-spec.md` 를 채워 `research/_SPEC.md` 작성: 전사, 사전 실측, **도식 판정 후보**, 항목별 필수 소제목([ ] 분석 축), 조사 단위 표, 품질 규칙, 파일 형식.
+3. 조사 단위: 범주별 r1..r(K) + 원리 블록(FND_) + 비교 블록(CMP_), `r(K+1)_gap`(도식 누락 보완 — 최신 도구·상용 서비스·보조 도구), `r(K+2)_value`(벤치마크·통합 비교·사용 및 활용용도·참조 아키텍처·로드맵·거버넌스). 단위당 블록 4~8개.
+✅ `--plan-only` 면 여기서 정지하고 _SPEC.md 경로를 보고.
+
+### 3. 병렬 조사 (서브에이전트)
+- 조사 단위마다 서브에이전트 1개(Agent/Task 도구, 없으면 순차). 지시: "먼저 `_SPEC.md` 를 읽고, 담당 블록을 **하나 끝낼 때마다 append 저장**, 1차 출처(공식 repo·문서·논문·백서) + `gh api` 실측 + arXiv 존재 확인, 확인 못 하면 [미확인], 형식 참고용 이전 보고서는 읽지도 인용하지도 말 것".
+- 구현 관점: 저장소 디렉토리 구조(`gh api repos/O/R/contents/PATH`), 실제 API·클래스명·설정 키, 동작 가능한 코드(40줄 이하).
+- 회수 후 점검: 블록 KEY 누락·`## ` 사용·셀 안 `|`·70줄 미만 블록은 해당 에이전트에 재요청.
+
+### 4. 검증
+```bash
+bash $KIT/setup_env.sh "<Title>_assets"
+python3 $KIT/verify_sources.py --assets "<Title>_assets"      # repos missing · papers bad → 본문에서 삭제 또는 [미확인]
+```
+✅ `missing` = 0(또는 본문에서 제거), `bad_papers` = 0.
+
+### 5. (선택 `--experiment`) 실측 실험 · 참조 구현
+- 정답을 먼저 정의한 소형 코퍼스로 도구별 **독립 가상환경**(uv)에서 실행, 지표·시간을 `exp/results.json` 으로 집계하고 보고서 수치는 이 파일에서만 읽는다. 하드웨어·버전 명시.
+- 통합 구현 가이드용 `sample/` 참조 구현은 실제로 실행해 출력까지 보고서에 싣는다. 모델·대용량 다운로드 전 사용자에게 용량을 알린다.
+
+### 6. 그림 (자체 작성, matplotlib)
+그림 1 원본(출처: 원저작자 · 사용자 첨부 이미지, 분석 목적 인용) · 그림 2 재구성 지형도(범주 × 항목, 라이선스·특징, 도식 밖 보완 항목 점선) ·
+범주별 원리/파이프라인 그림 · 항목별 ★·라이선스 막대 · (실험 시) 지표 그래프 · 성숙도 로드맵. 한글 글꼴 등록(AppleGothic/Noto CJK).
+
+### 7. 빌드
+```bash
+cp $SKILL_DIR/templates/deep/{build_report.py,report_config.py} "<Title>_assets/"
+# report_config.py 채우기: 제목·부제·태그라인·원본 출처·목적·방법·문서 구성 표·전사 절·CHAPTERS(조사 블록 배치)·결론·권고·원자료
+WVS_KIT=$KIT "<Title>_assets/.venv/bin/python" "<Title>_assets/build_report.py" --pdf
+```
+장 구성(이전 분석 보고서와 동일): 표지 → 목차 → 1 개요 및 분석 방법 → 2 원문 도식 전수 정리 → 3.. 범주별(원리 → 항목별 9개 소제목 → 비교) →
+도식 누락 보완 → 벤치마크·통합 비교 → (실측 실험) → 사용 및 활용용도 → 통합 구현 가이드 → 확장방안 → 라이선스·보안·거버넌스 →
+도식 검증 종합(각 절 '도식 판정' 자동 수집) → 결론 및 권고 → 부록 A 논문(arXiv 검증) · B 저장소 실측표 · C 출처 · D 그림·이미지 출처.
+특수 장(실험·참조 구현 결과)은 `p_<name>.py` 를 만들고 CHAPTERS 항목에 `module="p_<name>"` 로 연결.
+
+### 8. 검사
+```bash
+"<Title>_assets/.venv/bin/python" $KIT/check_report.py "<root>/<out-dir>/<Title>.docx" --pdf "<…>.pdf" --render /tmp/ada_pages \
+   --forbid "<형식 참고 문서명>" --min-h1 10
+```
+✅ PASS·빈 쪽 0. 렌더 쪽을 열어 표 넘침·코드 잘림·그림 겹침 확인. 최종 보고: 경로·장 수·쪽 수·저장소/논문 검증 수·주요 도식 판정 5줄.
+
+## 규칙
+- 1차 출처 우선, 수치는 출처 병기, 추측 금지. 저장소는 gh api 실측값, 논문은 arXiv 존재 확인된 것만.
+- **출처 명시 시 형식 참고용 이전 보고서는 제외**(부록 C 에도 넣지 않음).
+- 도식의 부정확·과장·오탈자·누락은 근거와 함께 '도식 판정' 표로 지적(일치/부분일치/표기오류/해석주의/누락/과장).
+- 공통 규칙은 references/kit.md §3.
