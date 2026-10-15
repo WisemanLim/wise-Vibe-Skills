@@ -57,6 +57,6 @@
 - 장황한 서술 대신 표·글머리. 파일 분량 700~1,200행. **`## ` 절 하나 끝날 때마다 파일에 저장**.
 - 사용자 GitHub({user}) 스타 목록: research/stars_all.tsv (full_name, stars, license, lang, desc, archived, starred_at) — 관련 항목을 grep 으로 찾아 우선 참고하고 REPOS 비고에 `★user` 표기.
   사용자 저장소 목록: research/user_repos.tsv (name, fork, archived, lang, license, pushed, stars, visibility, desc) — 재사용 후보는 비고에 `own`.
-- `{root}/Need-to-be-organized-into-PRD/` 의 다른 PRD·화면설계서는 **형식 참고용일 뿐 출처로 쓰지 말 것.**
+- 출력 폴더(`{root}/Need-to-be-organized-into-PRD/` 또는 `{root}/`)의 다른 PRD·화면설계서는 **형식 참고용일 뿐 출처로 쓰지 말 것.**
 - 참고 사이트·캡처는 기능·정보 구조·UI 패턴만 참고(문구·이미지 복제 금지), URL·접근일을 SOURCES 에 남긴다.
 ~~~

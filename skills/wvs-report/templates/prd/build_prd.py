@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """PRD 빌더 — part*.py(장별 본문)를 한 네임스페이스에서 번호 순으로 실행해 docx 생성 → (선택) PDF.
-wvs-report prd 템플릿. <root>/Need-to-be-organized-into-PRD/<Brand>_assets/ 에 복사해 쓴다.
+wvs-report prd 템플릿. <출력 폴더>/<Brand>_assets/ 에 복사해 쓴다 — 출력 폴더 = <root>/Need-to-be-organized-into-PRD(있을 때) 또는 <root>(없을 때), scripts/out_dir.py.
 
 네임스페이스: docx_lib(r.* 와 H/P/T/KV/CODE/FIG/W …), data, units, data_fr, ui_data, prd_auto, md2docx(M)
 게이트(prd_auto.gates): FR 없는 단위·카탈로그 밖 FR·화면 미커버 FR·유령 FR·실측 안 된 참고 OSS — 하나라도 있으면 실패(--no-strict 로 경고만).

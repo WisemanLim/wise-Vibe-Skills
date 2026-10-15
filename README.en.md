@@ -81,7 +81,7 @@ npx works for a private repository only when git can authenticate (`gh auth setu
 | `--skills <list>` | all | Subset of `wvs-review,wvs-report,wvs-tools` |
 | `--bin-dir <dir>` | — | Symlink the `wvs` CLI (e.g. `~/.local/bin`) |
 | `--desktop-zip [dir]` | `~/Downloads/wise-vibe-skills-desktop` | Build Claude Desktop upload zips (automatic when Claude Desktop is selected) |
-| `--ref <tag>` | `main` | Branch or tag to install (e.g. `v0.3.0`) |
+| `--ref <tag>` | `main` | Branch or tag to install (e.g. `v0.3.1`) |
 | `--link` · `--source <path>` | — | Symlink/copy from a local checkout (development) |
 | `--force` | — | Also overwrite same-named folders this installer did not create |
 | `--dry-run` · `--list` · `--uninstall` · `-y` | — | Plan only · list/detection · remove · no prompts |
@@ -108,7 +108,7 @@ For an agent that is not listed, use `--dir <that agent's skills folder>`.
 
 ### 2.4 Update / uninstall
 ```bash
-# Update = run the installer again (replaces the previous install). Pin a version with --ref v0.3.0
+# Update = run the installer again (replaces the previous install). Pin a version with --ref v0.3.1
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- -y
 # Uninstall (including the wvs link)
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --uninstall --bin-dir ~/.local/bin -y
@@ -167,8 +167,8 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 | Mode | Input | Output | Main steps |
 |---|---|---|---|
 | `repos` | Infographic listing tools (image/link) | `<root>/<Project>/NN-Category/Tool/` (shallow clones) + `Summary-Repos.docx/.pdf` | transcribe → map to GitHub (follows moved repos) → measure (stars, SPDX, releases, registries) → clone + trees → per-repo research → comparison, selection guide, infographic check |
-| `deep` | Diagram of categories / packages / concepts | `<root>/Miscellaneous-Data/<title>.docx/.pdf` + `<title>_assets/` | transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
-| `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
+| `deep` | Diagram of categories / packages / concepts | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
+| `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT rule in 4.4) | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
 
 ### 4.2 `{ }` and `[ ]` in prompts
 `{ }` marks values **extracted automatically** from the attachment (title, project name, document name, categories); `[ ]` marks detailed requirements **derived automatically** from it, which shape the classification, analysis axes, chapters, FRs and screens. Values you give explicitly take precedence.
@@ -209,6 +209,9 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 - Added to the PRD: 2.1 input inventory, chapter 3 input analysis (per-input summary · RQ list · unit catalogue · conflicts and decisions), 21.4 RQ → FR / NFR / chapter traceability. New build gates: **0 unmapped RQs · 0 unsummarized inputs**.
 
 ### 4.4 Shared rules
+- **Output folder (OUT)** — `deep` writes into `<root>/Miscellaneous-Data` and `prd` into `<root>/Need-to-be-organized-into-PRD` **when that folder exists**; **otherwise directly into `<root>`** (the default folder is never created). Override with `--out-dir <dir>`. The canonical rule is `wvs-report/scripts/out_dir.py`; the document and its `_assets/` folder always sit in the same OUT.
+  - e.g. with `~/wise-Analysis-Repos/Miscellaneous-Data/` present → `~/wise-Analysis-Repos/Miscellaneous-Data/OCR+PDF Extractors.docx`; without it → `~/wise-Analysis-Repos/OCR+PDF Extractors.docx`
+  - When `prd` gets an analysis report by name only, it looks in `<root>/Miscellaneous-Data/<name>` first, then `<root>/<name>`.
 - Sources, licenses and referenced images are always cited (figure captions, stars + SPDX for repositories, source and figure appendices).
 - **Previous documents used only as a format template are never cited** — checked after the build with `check_report.py --forbid`.
 - Unverified facts are marked `[미확인]` (unverified); repositories and papers that cannot be verified are left out (`gh_probe.py`, `verify_sources.py`).

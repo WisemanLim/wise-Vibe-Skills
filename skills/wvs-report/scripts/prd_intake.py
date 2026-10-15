@@ -18,9 +18,12 @@
   research/req_items.tsv    RQ 후보: id · input · line · section · type(fr|nfr|ui|constraint|goal|non-goal|info) · priority · text
                             (휴리스틱 추출 — 에이전트가 검토해 병합·분할·유형 수정)
 
-사용: prd_intake.py <입력…> --assets <dir> [--req F]… [--report F]… [--image F]… [--url U]… [--links urls.txt] [--prompt "텍스트"] [--no-fetch]
+사용: prd_intake.py <입력…> --assets <dir> [--root DIR] [--req F]… [--report F]… [--image F]… [--url U]… [--links urls.txt] [--prompt "텍스트"] [--no-fetch]
+보고서는 이름만 줘도 된다(예: "9AI-Concepts-…") — <root>/Miscellaneous-Data/<이름>.docx|pdf → <root>/<이름>.docx|pdf 순으로 찾는다.
 """
 import argparse, datetime, html, json, os, re, shutil, subprocess, sys, urllib.request
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from out_dir import report_candidates  # noqa: E402  (보고서 이름 탐색: <root>/Miscellaneous-Data → <root>)
 
 IMG = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".svg"}
 TXT = {".md", ".markdown", ".txt", ".rst"}
@@ -158,12 +161,18 @@ def main():
     ap.add_argument("--links", help="한 줄에 URL 하나인 파일")
     ap.add_argument("--prompt", help="요청문(번호 항목 → RQ)")
     ap.add_argument("--no-fetch", action="store_true", help="사이트 접속 생략(오프라인)")
+    ap.add_argument("--root", default=".", help="보고서 이름만 준 입력을 <root>/Miscellaneous-Data → <root> 순으로 찾는다")
     a = ap.parse_args()
 
     A = os.path.abspath(a.assets); INP = os.path.join(A, "inputs"); RES = os.path.join(A, "research")
     os.makedirs(INP, exist_ok=True); os.makedirs(RES, exist_ok=True)
     queue = []
-    for it in a.inputs: queue += [(p, f) for p, f in expand(it)]
+    for it in a.inputs:
+        if not re.match(r"^https?://", it, re.I) and not os.path.exists(it):
+            found = report_candidates(it, a.root)          # 이름만 준 분석 보고서
+            if found:
+                queue.append((found[0], "report")); continue
+        queue += [(p, f) for p, f in expand(it)]
     for k in ("req", "report", "image"): queue += [(p, k) for p in getattr(a, k)]
     queue += [(u, None) for u in a.url]
     if a.links:

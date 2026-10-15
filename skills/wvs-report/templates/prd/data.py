@@ -6,7 +6,7 @@ import csv, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.path.join(HERE, "research")
-OUT_DIR = os.path.dirname(HERE)                                   # <root>/Need-to-be-organized-into-PRD
+OUT_DIR = os.path.dirname(HERE)                                   # <Brand>_assets 의 상위 — scripts/out_dir.py 규칙: <root>/Need-to-be-organized-into-PRD 가 있으면 그곳, 없으면 <root>
 SYSTEM = "{Brand}"                                                # 제품명(핵심 문구·요구사항 문서의 비전/제목을 드러내는 짧은 브랜드)
 FILE_STEM = "{Brand}_{Core-Phrase-Slug}_PRD"                      # 예: ProdAI-Atlas_The-Map-Behind-Production-AI-Systems_PRD
 SUBTITLE = "{원본 핵심 문구} — {N 레이어 · M 개념} 마이크로 에이전트 플랫폼 제품 요구사항 정의서 (PRD)"

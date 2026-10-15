@@ -1,6 +1,6 @@
 ---
 name: wvs-report
-description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 도식의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, Miscellaneous-Data/<제목>.docx, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
+description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 도식의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, <제목>.docx — Miscellaneous-Data 폴더가 있으면 그 안, 없으면 루트, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
 ---
 
 # wvs-report — 보고서·PRD 생성 (repos · deep · prd)
@@ -14,8 +14,8 @@ Arguments: $ARGUMENTS
 | 모드 | 입력 | 산출물 | 고르는 신호 | 절차(먼저 읽기) |
 |---|---|---|---|---|
 | `repos` | 인포그래픽 이미지·링크(도구 목록) | `<root>/<Project>/NN-분류/도구/`(clone) + `Summary-Repos.docx/.pdf` | "clone", "Summary-Repos", 도구 로고 목록 | `references/repos.md` |
-| `deep` | 인포그래픽·도식 이미지·링크 | `<root>/Miscellaneous-Data/<제목>.docx/.pdf` + `<제목>_assets/` | "상세 분석", "보고서", 범주·패키지 비교 도식 | `references/deep.md` |
-| `prd` | 다중 입력 — 분석 보고서 docx/pdf(+ `_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지(도식·UI 시안·캡처) · 참고 사이트·GitHub URL · 요청문 (하나 이상, 섞어서) | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | "PRD", 요구사항 md·보고서 파일 지정 | `references/prd.md` |
+| `deep` | 인포그래픽·도식 이미지·링크 | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` — OUT = `<root>/Miscellaneous-Data`(있으면) 또는 `<root>` | "상세 분석", "보고서", 범주·패키지 비교 도식 | `references/deep.md` |
+| `prd` | 다중 입력 — 분석 보고서 docx/pdf(+ `_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지(도식·UI 시안·캡처) · 참고 사이트·GitHub URL · 요청문 (하나 이상, 섞어서) | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` — OUT = `<root>/Need-to-be-organized-into-PRD`(있으면) 또는 `<root>` | "PRD", 요구사항 md·보고서 파일 지정 | `references/prd.md` |
 
 흐름 연결: `deep` 결과(보고서 + `_assets/research`) → `prd` 의 입력. `repos` 결과도 `prd` 기초 자료로 쓸 수 있다.
 `prd` 는 입력을 먼저 `scripts/prd_intake.py` 로 분류·보존하고 요구사항 문서에서 RQ 를 뽑는다 — 분석 보고서 없이 요구사항 md·이미지·링크만으로도 동작한다.
@@ -27,6 +27,7 @@ Arguments: $ARGUMENTS
 | `--template <docx>` | 루트의 최근 같은 유형 문서 | 형식 참고(출처에 넣지 않음) |
 | `--no-pdf` | false | PDF 변환 생략 |
 | `--plan-only` | false | 전사·조사 사양(_SPEC.md)·카탈로그까지만 만들고 정지 |
+| `--out-dir <dir>` | 자동 | deep·prd 출력 폴더. 기본 폴더(`Miscellaneous-Data` · `Need-to-be-organized-into-PRD`)가 `<root>` 에 **있으면 그 안**, **없으면 `<root>` 바로 아래**에 만든다(기본 폴더를 새로 만들지 않음). 결정은 `python3 $KIT/out_dir.py deep|prd --root <root>` |
 모드별 옵션(`--project`·`--categories` / `--title`·`--axes`·`--experiment` / `--req`·`--image`·`--url`·`--links`·`--name`·`--github-user`·`--similar`·`--extra`·`--ui-pptx`)은 각 reference 의 인수 표.
 
 ## 3. `{ }` 와 `[ ]` — 자동 추출·도출 규칙

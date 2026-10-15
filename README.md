@@ -79,7 +79,7 @@ gh repo clone WisemanLim/wise-Vibe-Skills && cd wise-Vibe-Skills && ./install.sh
 | `--skills <list>` | 전체 | `wvs-review,wvs-report,wvs-tools` 중 선택 |
 | `--bin-dir <dir>` | — | `wvs` CLI 심볼릭 링크 생성(예: `~/.local/bin`) |
 | `--desktop-zip [dir]` | `~/Downloads/wise-vibe-skills-desktop` | Claude Desktop 업로드용 zip 생성(Claude Desktop 선택 시 자동) |
-| `--ref <tag>` | `main` | 설치할 브랜치·태그(예: `v0.3.0`) |
+| `--ref <tag>` | `main` | 설치할 브랜치·태그(예: `v0.3.1`) |
 | `--link` · `--source <path>` | — | 로컬 체크아웃에서 심볼릭 링크/복사(개발용) |
 | `--force` | — | 이 설치기가 만들지 않은 같은 이름 폴더도 덮어쓰기 |
 | `--dry-run` · `--list` · `--uninstall` · `-y` | — | 계획만 · 목록/감지 상태 · 제거 · 질문 없이 진행 |
@@ -106,7 +106,7 @@ npx wise-vibe-skills doctor          # 에이전트 감지·설치 현황·필�
 
 ### 2.4 업데이트 · 제거
 ```bash
-# 업데이트 = 같은 명령 재실행(이전 설치본을 교체). 특정 버전: --ref v0.3.0
+# 업데이트 = 같은 명령 재실행(이전 설치본을 교체). 특정 버전: --ref v0.3.1
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- -y
 # 제거 (wvs CLI 링크까지)
 curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/install.sh | bash -s -- --uninstall --bin-dir ~/.local/bin -y
@@ -165,8 +165,8 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | 모드 | 입력 | 산출물 | 핵심 단계 |
 |---|---|---|---|
 | `repos` | 도구 목록 인포그래픽(이미지·링크) | `<root>/<Project>/NN-분류/도구/`(shallow clone) + `Summary-Repos.docx/.pdf` | 전사 → GitHub 매핑(이전 저장소 추적) → 실측(★·SPDX·릴리스·레지스트리) → 클론·트리 → 저장소별 조사 → 비교·선택 가이드·인포그래픽 검증 |
-| `deep` | 범주·패키지·개념 도식 | `<root>/Miscellaneous-Data/<제목>.docx/.pdf` + `<제목>_assets/` | 전사 → 조사 사양 → 병렬 조사(정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → (선택 실측 실험) → 도식 판정 종합 |
-| `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `<root>/Need-to-be-organized-into-PRD/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
+| `deep` | 범주·패키지·개념 도식 | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 전사 → 조사 사양 → 병렬 조사(정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → (선택 실측 실험) → 도식 판정 종합 |
+| `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT 규칙 4.4) | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
 
 ### 4.2 `{ }` 와 `[ ]`
 요청문에서 `{ }` 는 **첨부에서 자동 추출**되는 값(제목·프로젝트명·문서명·범주), `[ ]` 는 **첨부에서 자동 도출**되어 분류·분석 축·장 구성·FR·화면을 이루는 세부 요구다. 직접 값을 주면 그 값이 우선한다.
@@ -207,6 +207,9 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 - PRD 에 추가되는 부분: 2.1 입력 인벤토리, 3장 입력 분석(입력별 요약 · RQ 정리 · 단위 카탈로그 · 충돌·결정), 21.4 RQ → FR·NFR·장 추적표. 빌드 게이트에 **미매핑 RQ 0 · 요약 없는 입력 0** 이 추가된다.
 
 ### 4.4 공통 규칙
+- **출력 폴더(OUT)** — `deep` 은 `<root>/Miscellaneous-Data`, `prd` 는 `<root>/Need-to-be-organized-into-PRD` 가 **있으면 그 안에**, **없으면 `<root>` 바로 아래에** 만든다(기본 폴더를 새로 만들지 않음). `--out-dir <dir>` 로 직접 지정할 수 있다. 규칙 정본: `wvs-report/scripts/out_dir.py`. 산출물과 `_assets/` 는 같은 OUT 에 놓인다.
+  - 예) `~/wise-Analysis-Repos/Miscellaneous-Data/` 가 있으면 → `~/wise-Analysis-Repos/Miscellaneous-Data/OCR+PDF Extractors.docx`, 없으면 → `~/wise-Analysis-Repos/OCR+PDF Extractors.docx`
+  - `prd` 에 분석 보고서를 이름만 주면 `<root>/Miscellaneous-Data/<이름>` → `<root>/<이름>` 순으로 찾는다.
 - 출처·라이선스·참고 이미지를 항상 명시한다(그림 캡션 출처, 저장소 ★·SPDX, 부록 출처 총람·그림 출처).
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외**한다 — 빌드 후 `check_report.py --forbid` 로 검사.
 - 확인 못 한 사실은 `[미확인]`, 실존 확인 안 된 저장소·논문은 싣지 않는다(`gh_probe.py`, `verify_sources.py`).

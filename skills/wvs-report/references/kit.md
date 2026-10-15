@@ -24,6 +24,7 @@ command -v soffice || ls /Applications/LibreOffice.app   # PDF 변환
 | `verify_sources.py` | research 의 REPOS·arXiv ID 실존 검증 → `measured.json`·`stats.py` | `verify_sources.py --assets <dir>` |
 | `clone_repos.sh` | 매핑표대로 `<root>/<분류>/<도구>/` shallow clone(병렬·재실행 안전) + 크기 | `clone_repos.sh map.tsv <root> 6` |
 | `make_trees.py` | 저장소별 compact 디렉토리 트리(깊이 2) → `trees.json` | `make_trees.py map.tsv <root> -o trees.json` |
+| `out_dir.py` | 출력 폴더 결정 규칙 정본 — deep: `<root>/Miscellaneous-Data`, prd: `<root>/Need-to-be-organized-into-PRD` 가 있으면 그곳, 없으면 `<root>`, `--out-dir` 우선 | `OUT=$(out_dir.py deep --root <root>)` |
 | `prd_intake.py` | PRD 입력 수집·분류(보고서·요구사항 문서·이미지·GitHub/사이트 URL·요청문) → `inputs/`·`inputs.json`·`_INPUTS.md`·`req_items.tsv`(RQ 추출) | `prd_intake.py req.md mock.png https://… --assets <dir> --prompt "…"` |
 | `github_user_lists.py` | 사용자 Stars·Repositories 전수 → `stars_all.tsv`·`user_repos.tsv` | `github_user_lists.py WisemanLim -o research/` |
 | `wire_lib.py` | PRD 와이어프레임 PNG(matplotlib) — `configure(brand, nav, …)` `frame()` 위젯·차트 `save()` | PRD 15.5 |

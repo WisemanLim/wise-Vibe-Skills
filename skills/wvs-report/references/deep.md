@@ -9,6 +9,8 @@
 > 첨부이미지상의 자세한 도식화 자료를 기반으로 분석하며, 필요시 인터넷 검색으로 관련 논문·백서 등을 포함. 구현 관점은 github.com repo 를 확인해 참고.
 > 보고서는 'Miscellaneous-Data/OCR+PDF Extractors.docx' 로 생성하고 pdf 로 변환. 형식은 이전 보고서를 참고하되 출처 명시 시 형식 참고용은 제외.
 
+출력 위치 규칙: `<root>/Miscellaneous-Data` 가 있으면 그 안, 없으면 `<root>/<제목>.docx/.pdf` (`--out-dir` 우선, `scripts/out_dir.py deep`).
+
 - `{ }` = **첨부에서 자동 추출**: 주제/대제목(→ 보고서 제목·파일명), 부제·원저작자·웹 주소, 범주 라벨과 순서.
 - `[ ]` = **첨부·요청에서 도출**: ① 구성 축 — 범주 → 세부 항목(패키지·라이브러리·개념 카드) 목록과 비교 관점(도식 푸터·말풍선이 말하는 차원 포함)
   ② 분석 축 — 항목별 필수 소제목(정의·소스 저장소·설치·환경설정·사용방법·동작방식·성능·활용용도·확장방안·도식 판정). 요청문에 다른 축이 있으면 그것을 따른다.
@@ -18,17 +20,18 @@
 |---|---|---|
 | 위치 인수 | (대화의 첨부) | 이미지 경로·URL — 여러 장이면 같은 주제로 합쳐 전사 |
 | `--root <dir>` | 현재 작업 디렉토리 | 작업 루트(예: wise-Analysis-Repos) |
-| `--out-dir <rel>` | `Miscellaneous-Data` | 출력 폴더(루트 기준) |
+| `--out-dir <dir>` | 자동 | 출력 폴더(`OUT`). 기본: `<root>/Miscellaneous-Data` 가 **있으면** 그곳, **없으면** `<root>` 바로 아래(폴더를 새로 만들지 않음) — `scripts/out_dir.py deep`. 지정하면 그 폴더(상대 경로는 `<root>` 기준) |
 | `--title <name>` | {첨부 대제목} | 보고서 제목 = 파일명(확장자 제외). 파일명 금지 문자 `/:` 만 치환 |
 | `--axes "<a, b, …>"` | [요청문에서 도출] | 항목별 분석 축을 명시적으로 지정 |
 | `--experiment` | false | 실측 실험 장 추가(도구를 격리 환경에 설치해 같은 입력으로 측정) |
-| `--template <docx>` | `<root>/<out-dir>/` 최근 보고서 | 형식 참고(출처에 넣지 않음) |
+| `--template <docx>` | `OUT` 의 최근 보고서 | 형식 참고(출처에 넣지 않음) |
 | `--no-pdf` · `--plan-only` | false | PDF 생략 · 전사와 조사 사양(_SPEC.md)까지만 |
 
 ## 산출물
 ```
-<root>/<out-dir>/<Title>.docx / .pdf
-<root>/<out-dir>/<Title>_assets/
+OUT = <root>/Miscellaneous-Data (있을 때) | <root> (없을 때) | --out-dir
+OUT/<Title>.docx / .pdf
+OUT/<Title>_assets/
 ├── source_infographic.png      ← 원본 첨부
 ├── research/ _SPEC.md r1_*.md … rN_*.md   ← 조사 원문(블록 = 절)
 ├── measured.json stats.py      ← 저장소·논문 검증(verify_sources.py)
@@ -40,6 +43,7 @@
 
 ## 절차
 `SKILL_DIR` = wvs-report 스킬 디렉토리, `KIT` = `SKILL_DIR/scripts`.
+**출력 폴더 먼저 결정**: `OUT=$(python3 $KIT/out_dir.py deep --root <root> [--out-dir <dir>])` — 이하 `<Title>_assets` 는 모두 `$OUT/<Title>_assets` 이고, 보고서는 `$OUT/<Title>.docx/.pdf` 로 저장된다(빌드 템플릿이 자산 폴더의 상위를 출력 폴더로 쓴다).
 
 ### 1. 입력 확보와 전사 ({ } 자동 추출)
 1. 첨부를 `<Title>_assets/source_infographic.png` 로 저장(URL·게시물은 이미지 추출, 실패 시 사용자에게 파일 요청).
@@ -76,7 +80,7 @@ python3 $KIT/verify_sources.py --assets "<Title>_assets"      # repos missing ·
 ### 7. 빌드
 ```bash
 cp $SKILL_DIR/templates/deep/{build_report.py,report_config.py} "<Title>_assets/"
-# report_config.py 채우기: 제목·부제·태그라인·원본 출처·목적·방법·문서 구성 표·전사 절·CHAPTERS(조사 블록 배치)·결론·권고·원자료
+# report_config.py 채우기: TITLE_FILE(=<Title>)·제목·부제·태그라인·원본 출처·목적·방법·문서 구성 표·전사 절·CHAPTERS(조사 블록 배치)·결론·권고·원자료
 WVS_KIT=$KIT "<Title>_assets/.venv/bin/python" "<Title>_assets/build_report.py" --pdf
 ```
 장 구성(이전 분석 보고서와 동일): 표지 → 목차 → 1 개요 및 분석 방법 → 2 원문 도식 전수 정리 → 3.. 범주별(원리 → 항목별 9개 소제목 → 비교) →
@@ -86,7 +90,7 @@ WVS_KIT=$KIT "<Title>_assets/.venv/bin/python" "<Title>_assets/build_report.py" 
 
 ### 8. 검사
 ```bash
-"<Title>_assets/.venv/bin/python" $KIT/check_report.py "<root>/<out-dir>/<Title>.docx" --pdf "<…>.pdf" --render /tmp/ada_pages \
+"$OUT/<Title>_assets/.venv/bin/python" $KIT/check_report.py "$OUT/<Title>.docx" --pdf "<…>.pdf" --render /tmp/ada_pages \
    --forbid "<형식 참고 문서명>" --min-h1 10
 ```
 ✅ PASS·빈 쪽 0. 렌더 쪽을 열어 표 넘침·코드 잘림·그림 겹침 확인. 최종 보고: 경로·장 수·쪽 수·저장소/논문 검증 수·주요 도식 판정 5줄.

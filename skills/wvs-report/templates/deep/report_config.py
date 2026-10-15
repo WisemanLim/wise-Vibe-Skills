@@ -3,7 +3,10 @@
 { } 표기 = 첨부에서 자동 추출되는 값(제목·원저자·범주 등), [ ] 표기 = 첨부에서 도출된 세부 분석 축(장·절 구성)."""
 import os
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))          # <root>  (= <root>/Miscellaneous-Data/<Title>_assets/..)
+# 출력 폴더 = 이 자산 폴더(<Title>_assets)의 상위. 규칙(scripts/out_dir.py): <root>/Miscellaneous-Data 가 있으면 그곳, 없으면 <root>
+OUT_DIR = os.path.dirname(HERE)
+ROOT = os.path.dirname(OUT_DIR) if os.path.basename(OUT_DIR) == "Miscellaneous-Data" else OUT_DIR
+TITLE_FILE = "{OCR+PDF Extractors}"                     # 보고서 제목 = 파일명(확장자 제외)
 
 CFG = dict(
     TITLE="{OCR + PDF Extractors}",                                   # 도식 대제목 그대로(파일명과 같게)
@@ -11,8 +14,8 @@ CFG = dict(
     TAGLINE="[범주(도구 …) 나열] 를 [정의 · 소스 저장소 · 설치·환경설정 · 사용방법 · 동작방식] 으로 상세화하고, …까지 정리한 분석 문서",
     SOURCE="{인포그래픽 'OCR + PDF EXTRACTORS — Open-source tools worth knowing for AI engineers' — 작성자 (도식 표기)}",
     EXTRA_SOURCES="",                                                  # 예: 'ISO 32000 · OmniDocBench, 본 보고서 실측 실험(Apple M5 Max)'
-    OUT=os.path.join(ROOT, "Miscellaneous-Data", "{OCR+PDF Extractors}.docx"),
-    OUT_LABEL="wise-Analysis-Repos/Miscellaneous-Data/{OCR+PDF Extractors}.docx (+ .pdf)",
+    OUT=os.path.join(OUT_DIR, TITLE_FILE + ".docx"),
+    OUT_LABEL=os.path.normpath(os.path.join(os.path.basename(ROOT), os.path.relpath(OUT_DIR, ROOT), TITLE_FILE + ".docx")) + " (+ .pdf)",
     PURPOSE=[
         "분석 대상은 인포그래픽 **'{제목}'** … 도식의 범주·항목·핵심 주장 요약(원문 인용).",
         "본 보고서의 목적은 … ① 전사·현행 대조 ② [항목별 상세화 축] ③ … ④ 도식 누락 보완 ⑤ 활용·구현·확장.",

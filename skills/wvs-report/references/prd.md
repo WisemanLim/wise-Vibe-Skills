@@ -13,6 +13,8 @@
 > **6.** 설치용 패키지는 멀티플랫폼, 릴리스 방법 포함. 에이전트는 개별·독립 구동·배포 가능, 에이전트 관리(등록·수정·삭제·배포 등) 매니징(오케스트레이터 포함 Multi-Agent Systems)도 구동·배포 가능.**]**
 > \* 출처와 라이선스, 참고 이미지(첨부 이미지 등)를 항상 명시. \*\* 양식(템플릿)은 이전 문서를 참고하되 출처 명시 시 양식 문서는 생략.
 
+출력 위치 규칙: `<root>/Need-to-be-organized-into-PRD` 가 있으면 그 안, 없으면 `<root>/<Brand>_…_PRD.docx/.pdf` (`--out-dir` 우선, `scripts/out_dir.py prd`).
+
 - `{ }` = **자동 추출**: 입력(분석 보고서·요구사항/개발방향 문서·첨부 이미지·참고 링크·요청문)의 제목·핵심 문구(→ 제품명·문서명), 구조(도식 레이어·카드 / 문서의 장·기능 묶음).
 - `[ ]` = **자동 도출해 PRD 에 반영**: 2~6항 — 단위 분해(units.py), FR·화면·스택·유사 시스템·패키징/릴리스. 사용자 요청문에 다른 번호 항목이 있으면 그대로 1.1 대응표·21.2 추적표에 넣는다.
 
@@ -31,11 +33,11 @@
 ## 인수
 | 인수 | 기본값 | 의미 |
 |---|---|---|
-| 위치 인수 | (1개 이상) | 입력 — 파일(보고서·문서·이미지)·폴더·URL 을 섞어서. 보고서는 이름만 줘도 `<root>/Miscellaneous-Data/<이름>.docx|pdf` 탐색. 대화에 붙은 이미지·링크도 입력 |
+| 위치 인수 | (1개 이상) | 입력 — 파일(보고서·문서·이미지)·폴더·URL 을 섞어서. 보고서는 이름만 줘도 `<root>/Miscellaneous-Data/<이름>.docx|pdf` → `<root>/<이름>.docx|pdf` 순으로 탐색. 대화에 붙은 이미지·링크도 입력 |
 | `--req <file>` · `--report <file>` · `--image <file>` · `--url <url>` | — | 자동 분류를 덮어쓰는 강제 지정(반복 가능) |
 | `--links <file>` | — | 한 줄에 URL 하나인 목록 파일 |
 | `--root <dir>` | 현재 작업 디렉토리 | 작업 루트(예: wise-Analysis-Repos) |
-| `--out-dir <rel>` | `Need-to-be-organized-into-PRD` | PRD 출력 폴더 |
+| `--out-dir <dir>` | 자동 | PRD 출력 폴더(`OUT`). 기본: `<root>/Need-to-be-organized-into-PRD` 가 **있으면** 그곳, **없으면** `<root>` 바로 아래(폴더를 새로 만들지 않음) — `scripts/out_dir.py prd`. 지정하면 그 폴더(상대 경로는 `<root>` 기준) |
 | `--name <Brand>` | {핵심 문구에서 자동} | 제품명(파일명 접두) |
 | `--github-user <id>` | `WisemanLim` | stars·repositories 교차 대상 |
 | `--similar "<도메인>"` | [요청 5항에서 도출] | 유사 시스템 조사 도메인 |
@@ -45,13 +47,14 @@
 
 ## 산출물
 ```
-<root>/<out-dir>/<Brand>_<Core-Phrase-Slug>_PRD.docx / .pdf
-<root>/<out-dir>/<Brand>_UI_Design.pptx / .pdf            (--ui-pptx)
-<root>/<out-dir>/<Brand>_assets/
+OUT = <root>/Need-to-be-organized-into-PRD (있을 때) | <root> (없을 때) | --out-dir
+OUT/<Brand>_<Core-Phrase-Slug>_PRD.docx / .pdf
+OUT/<Brand>_UI_Design.pptx / .pdf            (--ui-pptx)
+OUT/<Brand>_assets/
 ├── inputs/ (IN-NN.* 입력 사본 · 사이트 텍스트 발췌)   source_infographic.png (구조 도식이 있을 때)
 ├── research/(inputs.json _INPUTS.md req_items.tsv req_map.tsv _SPEC.md r1~r7_*.md stars_all.tsv user_repos.tsv stars_relevant.tsv repos_catalog.tsv repos.tsv)
 ├── units.py data.py data_fr.py ui_data.py prd_auto.py kitpath.py collect_repos.py build_prd.py part*.py figs.py fig*.png ui/ui_<S-ID>.png .venv/
-<root>/<out-dir>/<Brand>_UI_assets/pptx/ (build_ui.py ui_screens_*.py)  (--ui-pptx)
+OUT/<Brand>_UI_assets/pptx/ (build_ui.py ui_screens_*.py)  (--ui-pptx)
 ```
 
 ## 절차
@@ -60,8 +63,9 @@
 
 ### 1. 입력 수집·정규화 ({ } 자동 추출)
 ```bash
-mkdir -p "<Brand 미정이면 _work>_assets" && bash $KIT/setup_env.sh "<…>_assets"
-python3 $KIT/prd_intake.py <입력…> --assets "<…>_assets" [--req F] [--image F] [--url U] [--links urls.txt] [--prompt "<요청문>"]
+OUT=$(python3 $KIT/out_dir.py prd --root <root> [--out-dir <dir>])      # 출력 폴더 결정(이하 <Brand>_assets = $OUT/<Brand>_assets)
+mkdir -p "$OUT/<Brand 미정이면 _work>_assets" && bash $KIT/setup_env.sh "$OUT/<…>_assets"
+python3 $KIT/prd_intake.py <입력…> --root <root> --assets "$OUT/<…>_assets" [--req F] [--image F] [--url U] [--links urls.txt] [--prompt "<요청문>"]
 #  → inputs/IN-NN.* · research/inputs.json · research/_INPUTS.md · research/req_items.tsv (출력에 분류 결과·RQ 수·CHECK 경고)
 ```
 대화에 붙은 이미지는 파일로 저장해 `--image` 로, 요청문은 `--prompt` 로 넘긴다. 브랜드가 정해지면 폴더를 `<Brand>_assets` 로 바꾼다.
@@ -133,7 +137,7 @@ r7 결과로 4장(공통 기능군·유사 시스템 ≥12·기능 매트릭스�
 ```bash
 WVS_KIT=$KIT .venv/bin/python build_prd.py --pdf        # 게이트 실패 시 중단(FR 없는 단위·화면 미커버 FR·유령 FR·실측 안 된 OSS·미매핑 RQ·요약 없는 입력)
 .venv/bin/python -c "import data_fr,prd_auto;print('\n'.join(list(data_fr.FR)+[q['id'] for q in prd_auto.RQ]))" > /tmp/fr_ids.txt
-.venv/bin/python $KIT/check_report.py "../<FILE_STEM>.docx" --pdf "../<FILE_STEM>.pdf" --render /tmp/prd_pages \
+.venv/bin/python $KIT/check_report.py "$OUT/<FILE_STEM>.docx" --pdf "$OUT/<FILE_STEM>.pdf" --render /tmp/prd_pages \
    --require-file /tmp/fr_ids.txt --forbid "<형식 참고 PRD 파일명>" --min-h1 20
 ```
 ✅ 게이트 PASS · check PASS(빈 쪽 0, FR 전부 등장). 렌더 쪽을 열어 표 넘침·그림 겹침 확인.
