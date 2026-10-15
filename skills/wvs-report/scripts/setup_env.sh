@@ -4,7 +4,16 @@
 # 이후 빌드: <assets>/.venv/bin/python build.py --pdf
 # 사용: setup_env.sh <assets_dir>   (출력: venv python 경로)
 set -euo pipefail
-A="${1:-.}"; mkdir -p "$A"; V="$A/.venv"
+A="${1:-.}"
+P="$(dirname "$A")"
+if [ ! -d "$P" ]; then
+  echo "ERROR: output folder '$P' does not exist — decide it with: python3 <wvs-report>/scripts/out_dir.py deep|prd --root <root>" >&2
+  echo "       (Miscellaneous-Data / Need-to-be-organized-into-PRD 는 이미 있을 때만 쓴다. 새로 만들지 않는다)" >&2
+  exit 4
+fi
+mkdir -p "$A"; V="$A/.venv"
+KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+printf '%s\n' "$KIT_DIR" > "$A/.wvs_kit"          # 빌드 템플릿이 툴킷을 찾는 1순위 경로(에이전트·설치 위치와 무관)
 PKGS=(python-docx python-pptx matplotlib pymupdf)
 if [ ! -x "$V/bin/python" ]; then
   if command -v uv >/dev/null 2>&1; then uv venv -q "$V"; else python3 -m venv "$V"; fi

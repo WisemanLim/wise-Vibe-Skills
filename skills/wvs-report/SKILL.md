@@ -37,7 +37,8 @@ Arguments: $ARGUMENTS
 
 ## 4. 경로와 도구
 - `SKILL_DIR` = 이 SKILL.md 디렉토리, `KIT` = `SKILL_DIR/scripts` (docx 엔진·PDF 변환·GitHub/레지스트리/arXiv 검증·클론·트리·와이어프레임·pptx·산출물 검사). 상세: `references/kit.md`.
-- 템플릿: `SKILL_DIR/templates/{repos,deep,prd}/` — 보고서 `_assets/` 로 복사해 채운 뒤 빌드. 빌드 스크립트는 `$WVS_KIT` 또는 설치된 `wvs-report/scripts` 를 자동으로 찾는다.
+- 템플릿: `SKILL_DIR/templates/{repos,deep,prd}/` — 보고서 `_assets/` 로 복사해 채운 뒤 빌드. 화면설계서는 `templates/prd/ui/` → `<Brand>_UI_assets/`(빌더 `build_ui.py` 수정·재작성 금지). 빌드 스크립트는 `$WVS_KIT`·자산 폴더 `.wvs_kit`·설치된 `wvs-report/scripts` 순으로 툴킷을 찾는다.
+- 출력 폴더는 항상 `out_dir.py` 결과. 요청문의 "Miscellaneous-Data/…로 생성"·"Need-to-be-organized-into-PRD 이하에 작성" 은 이 규칙(있으면 그 안, 없으면 `<root>`)이며 폴더를 만들라는 뜻이 아니다.
 - 준비: `bash $KIT/setup_env.sh <assets>`(venv: python-docx·python-pptx·matplotlib·pymupdf), `gh auth status`, LibreOffice(`soffice`).
 
 ## 5. 공통 규칙 (세 모드 공통)
@@ -45,7 +46,7 @@ Arguments: $ARGUMENTS
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외** — `check_report.py --forbid "<이전 문서명>"` 로 확인.
 - 1차 출처 우선, 확인 못 한 사실 `[미확인]`, 업계 일반 가정 `[도메인]`. 실존 확인 안 된 저장소·논문은 쓰지 않는다(`verify_sources.py`, `gh_probe.py`).
 - 조사는 서브에이전트 병렬(없으면 순차), 블록·절 하나 끝낼 때마다 파일 저장.
-- 완료 전 `check_report.py <docx> --pdf <pdf> --render <dir>` PASS + 렌더 쪽 육안 확인. 최종 보고: 경로·장/쪽 수·검증 수·핵심 판정 5줄.
+- 완료 전 `check_report.py <docx> --pdf <pdf> --render <dir>` PASS(화면설계서는 `check_ui_design.py <pptx> --pdf --render <dir>` PASS) + 렌더 쪽 육안 확인. 최종 보고: 경로·장/쪽 수·검증 수·핵심 판정 5줄.
 
 ## 6. 예시
 ```text

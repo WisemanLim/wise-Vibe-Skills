@@ -10,7 +10,7 @@ bash -n install.sh skills/wvs-tools/scripts/wvs && for f in skills/*/scripts/*.s
 if command -v shellcheck >/dev/null; then shellcheck -S warning install.sh skills/wvs-tools/scripts/wvs skills/wvs-report/scripts/*.sh && pass "shellcheck"; fi
 node --check bin/wise-vibe-skills.mjs && pass "node syntax"
 python3 -c "import ast,sys; [ast.parse(open(f, encoding='utf-8').read(), f) for f in sys.argv[1:]]" \
-  skills/*/scripts/*.py skills/*/templates/*/*.py tests/*.py && pass "python syntax"
+  skills/*/scripts/*.py skills/*/templates/*/*.py skills/*/templates/*/ui/*.py skills/*/templates/*/ui/pptx/*.py tests/*.py && pass "python syntax"
 cmp -s skills/wvs-report/scripts/docx2pdf.sh skills/wvs-tools/scripts/lib/docx2pdf.sh && pass "docx2pdf.sh copies identical"
 
 H="$(mktemp -d)"; trap 'rm -rf "$H"' EXIT
@@ -52,4 +52,5 @@ PY="${WVS_TEST_PY:-}"
 if [ -z "$PY" ]; then PY="$(bash skills/wvs-report/scripts/setup_env.sh "$H/venv" | tail -1)"; fi
 "$PY" tests/smoke_kit.py >/dev/null && pass "wvs-report kit smoke build (docx/pptx/pdf + check_report)"
 "$PY" tests/smoke_prd.py >/dev/null && pass "wvs-report prd smoke (multi-input intake · RQ trace · gates pass/fail)"
+"$PY" tests/smoke_ui.py >/dev/null && pass "wvs-report UI design smoke (standard builder · form check · builder/marker enforcement · FR gate)"
 echo "ALL TESTS PASSED"

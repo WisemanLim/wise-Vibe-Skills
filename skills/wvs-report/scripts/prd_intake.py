@@ -165,6 +165,9 @@ def main():
     a = ap.parse_args()
 
     A = os.path.abspath(a.assets); INP = os.path.join(A, "inputs"); RES = os.path.join(A, "research")
+    if not os.path.isdir(os.path.dirname(A)):
+        sys.exit(f"ERROR: output folder '{os.path.dirname(A)}' does not exist — decide it with out_dir.py prd --root <root> "
+                 "(Need-to-be-organized-into-PRD 는 이미 있을 때만 쓰고 새로 만들지 않는다)")
     os.makedirs(INP, exist_ok=True); os.makedirs(RES, exist_ok=True)
     queue = []
     for it in a.inputs:

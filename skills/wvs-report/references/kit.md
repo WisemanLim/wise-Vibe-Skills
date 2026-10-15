@@ -30,6 +30,7 @@ command -v soffice || ls /Applications/LibreOffice.app   # PDF 변환
 | `wire_lib.py` | PRD 와이어프레임 PNG(matplotlib) — `configure(brand, nav, …)` `frame()` 위젯·차트 `save()` | PRD 15.5 |
 | `ui_lib.py` | 화면설계서 pptx(python-pptx) — `configure(system, nav, …)` `screen_slide(spec)` `Wire.shell()` | `<Brand>_UI_Design.pptx` |
 | `check_report.py` | 산출물 검사 — 장·표·그림 수, 금지 문자열(형식 참고 문서명), 필수 ID, PDF 빈 쪽, 쪽 PNG 렌더 | 빌드 후 반드시 |
+| `check_ui_design.py` | 화면설계서 양식 게이트 — 슬라이드 순서(앞부속·PART 1 9절·PART 2·부록 A~F)·화면 밀도·콜아웃·표준 빌더 표식·`build_ui.py` 템플릿 동일성, PDF 빈 쪽·렌더 | `templates/prd/ui/pptx/build_ui.py` 가 자동 실행 |
 
 ## 2. 문서 양식(이전 보고서와 동일)
 US Letter · 여백 2.0cm · Normal 10pt · H1 16pt 1F3864(새 쪽) · H2 13pt 2E74B5 · H3 11.5pt 404040 · 표 헤더 1F3864 흰 글씨 · 키-값 표 첫 열 DEEAF6 ·

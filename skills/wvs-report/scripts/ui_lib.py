@@ -160,7 +160,7 @@ def screen_slide(spec):
     sl = new_slide()
     meta = [["시스템", DOC["system"], "화면 ID", spec["id"], "화면 유형", spec.get("kind", "화면")],
             ["화면명", spec["name"], "화면 경로", spec.get("path", "-"), "접근 권한", spec.get("perm", "로그인")],
-            ["우선순위", spec.get("prio", "P0"), "PRD 추적", " ".join(spec["fr"][:3]) + (f" 외 {len(spec['fr']) - 3}" if len(spec["fr"]) > 3 else ""), "작성일 / 버전", f"{DOC['date']} / {DOC['ver']}"]]
+            ["우선순위", spec.get("prio", "P0"), "PRD 추적", " ".join(spec["fr"][:6]) + (" …" if len(spec["fr"]) > 6 else ""), "작성일 / 버전", f"{DOC['date']} / {DOC['ver']}"]]
     shp = sl.shapes.add_table(3, 6, Inches(0.4), Inches(0.22), Inches(SW - 0.8), Inches(0.66))
     tbl = shp.table; tbl._tbl.tblPr.set("firstRow", "0"); tbl._tbl.tblPr.set("bandRow", "0")
     widths = [0.9, 2.3, 0.9, 3.9, 1.2, 3.33]
@@ -181,7 +181,7 @@ def screen_slide(spec):
     rows = [["No", "구성요소", "유형", "기능 설명 / 동작", "연계"]] + [[str(it[0]), it[1], it[2], it[3], it[4]] for it in spec["items"]]
     n = len(rows)
     rh = max(0.2, min(0.36, 5.0 / n))
-    table(sl, DX, WY, DW, rows, [0.28, 0.82, 0.5, DW - 0.28 - 0.82 - 0.5 - 1.22, 1.22], font=6.5, row_h=rh)
+    table(sl, DX, WY, DW, rows, [0.3, 0.9, 0.55, DW - 0.3 - 0.9 - 0.55 - 0.95, 0.95], font=6.8, row_h=rh)
     text(sl, 0.4, WY + WH + 0.03, SW - 0.8, 0.28, "관련 요구사항(PRD): " + " ".join(spec["fr"]), size=7.2, color=SUB)
     footer(sl, spec.get("section", "화면 설계"))
     if spec.get("notes"): sl.notes_slide.notes_text_frame.text = spec["notes"]
@@ -328,6 +328,22 @@ class Wire:
         deco = {"mac": "● ● ●  ", "win": "", "linux": ""}.get(os_name or "", "")
         self.t(1.5, 1, 70, 5, deco + "▣  " + DOC["system"] + " · " + title, size=6.6, bold=True, anchor="m")
         self.t(66, 1, 32, 5, ("—  ▢  ✕   " if os_name == "win" else "") + right, size=4.8, color=SUB, align="r", anchor="m")
+    def terminal(self, title, lines_, x=0, y=0, w=100, h=100, size=5.0, step=3.6):
+        """CLI 터미널 창. lines_: 문자열 또는 (문자열, 색) 목록. 색: 'ok'|'err'|'warn'|'cmd'|None. 반환 = 다음 줄 y."""
+        self.box(x, y, w, h, fill="1F2333", line=None, radius=0.03)
+        self.box(x, y, w, 5.5, fill="2E3345", line=None, radius=0.03)
+        self.t(x + 1.5, y + 0.5, w - 3, 4.5, "● ● ●   " + title, size=5.0, color="AFB6CC", anchor="m")
+        cy = y + 7.5
+        cmap = {"ok": "69DB7C", "err": "FF8787", "warn": "FFD43B", "cmd": "8CE0C8", None: "E6E8F2"}
+        for ln in lines_:
+            s_, c = (ln, None) if isinstance(ln, str) else ln
+            self.t(x + 2, cy, w - 4, step, s_, size=size, color=cmap.get(c, c), font=MONO)
+            cy += step
+        return cy
+    def health(self, x, y, st="healthy", w=10):
+        """헬스 배지. st: healthy|degraded|down|unknown"""
+        f, c = {"healthy": ("E9F7EF", GREEN), "degraded": ("FFF4E0", "7A4E00"), "down": ("FDECEC", RED), "unknown": ("EEF0F4", "555555")}[st]
+        return self.badge(x, y, st, fill=f, color=c, w=w, size=4.8)
     def agent_card(self, x, y, w, h, name, ver, trust="official", domain="공통", installs="1.2k", status="설치됨", price=None, desc=None):
         """마켓·에이전트 목록 카드. trust: official/partner/community/external"""
         self.box(x, y, w, h, fill="FFFFFF", line=LINE, radius=0.1)
@@ -379,3 +395,55 @@ class Wire:
         self.box(x, y, w, h, fill="FBFBFF", line=IND_L, dash=True, radius=0.1)
         self.t(x, y + h * 0.3, w, 6, msg, size=6, color=SUB, align="c")
         if action: self.btn(x + w / 2 - 10, y + h * 0.55, 20, 5.5, action)
+
+
+# ---------- 와이어프레임 공통 헬퍼(화면설계서 표준 밀도) — ui_screens_<x>.py 에서 그대로 쓴다 ----------
+OK_F, WARN_F, BAD_F, INFO_F, EXT_F, WARN_T = "E9F7EF", "FFF4E0", "FDECEC", "E6F7F4", "F1ECFF", "7A4E00"
+
+
+def panel(w, x, y, wd, h, title, cur=False, done=False, fill="FFFFFF"):
+    """제목 있는 패널(카드 영역). cur=현재 강조, done=완료(녹색 제목)."""
+    w.box(x, y, wd, h, fill=fill, line=IND if cur else LINE, radius=0.08, lw=1.2 if cur else 0.75)
+    w.t(x + 1.5, y + 1, wd - 3, 4, title, size=6, bold=True, color=IND if cur else (GREEN if done else TXT))
+
+
+def lines(w, x, y, wd, rows, step=4.2, size=5.2, color="444444"):
+    """텍스트 줄 목록."""
+    for i, r in enumerate(rows):
+        w.t(x, y + i * step, wd, 4, r, size=size, color=color)
+
+
+def checks(w, x, y, wd, rows, step=4.2, size=5.1):
+    """(텍스트, 색) 목록 → 상태 점 + 텍스트."""
+    for i, (s, c) in enumerate(rows):
+        w.dot(x, y + i * step + 1.6, c)
+        w.t(x + 1.8, y + i * step, wd - 2, 3.6, s, size=size, color=TXT if c != GRAY_L else SUB, anchor="m")
+
+
+def co(w, pts):
+    """콜아웃 ①②③ — 요소 좌상단 바로 왼쪽(라벨을 가리지 않게). pts 개수 = 기능 표 items 수."""
+    for n, (x, y) in enumerate(pts, 1):
+        w.callout(n, max(1.2, x - 1.6), y)
+
+
+def note(w, x, y, wd, h, s, kind="warn", size=5):
+    """안내 배너. kind: warn|bad|ok|info|ext"""
+    f, c, l = {"warn": (WARN_F, WARN_T, YELLOW), "bad": (BAD_F, RED, RED), "ok": (OK_F, GREEN, GREEN),
+               "info": (INFO_F, TEAL, TEAL), "ext": (EXT_F, PURPLE, PURPLE)}[kind]
+    w.box(x, y, wd, h, fill=f, line=l, radius=0.06)
+    w.t(x + 1, y, wd - 2, h, s, size=size, color=c, anchor="m")
+
+
+def kpi(w, x, y, wd, h, label, value, sub, color=TXT):
+    """KPI 카드(라벨 · 큰 값 · 보조 설명)."""
+    w.box(x, y, wd, h, fill="FFFFFF", line=LINE, radius=0.08)
+    w.t(x + 1.2, y + 0.8, wd - 2, 3.4, label, size=4.8, color=SUB)
+    w.t(x + 1.2, y + 4.2, wd - 2, 5, value, size=8, bold=True, color=color)
+    w.t(x + 1.2, y + h - 4.2, wd - 2, 3.4, sub, size=4.6, color=SUB)
+
+
+def spark(w, x, y, wd, h, pts, c=IND):
+    """간이 시계열 막대(편집 가능한 도형). pts: 0~1 값 목록."""
+    n = len(pts); bw = wd / n
+    for i, v in enumerate(pts):
+        w.box(x + i * bw + 0.15, y + h * (1 - v), bw - 0.3, h * v, fill=c, line=None, radius=0.01)

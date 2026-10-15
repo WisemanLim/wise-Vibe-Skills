@@ -14,6 +14,7 @@
 > \* 출처와 라이선스, 참고 이미지(첨부 이미지 등)를 항상 명시. \*\* 양식(템플릿)은 이전 문서를 참고하되 출처 명시 시 양식 문서는 생략.
 
 출력 위치 규칙: `<root>/Need-to-be-organized-into-PRD` 가 있으면 그 안, 없으면 `<root>/<Brand>_…_PRD.docx/.pdf` (`--out-dir` 우선, `scripts/out_dir.py prd`).
+> 위 1항의 "Need-to-be-organized-into-PRD 이하에 작성" 은 **이 규칙을 뜻한다 — 폴더가 없으면 만들지 않고 `<root>` 에 쓴다.** 출력 폴더는 항상 `out_dir.py` 결과만 쓰고 `mkdir` 로 기본 폴더를 만들지 않는다(`setup_env.sh`·`prd_intake.py` 는 출력 폴더가 없으면 중단).
 
 - `{ }` = **자동 추출**: 입력(분석 보고서·요구사항/개발방향 문서·첨부 이미지·참고 링크·요청문)의 제목·핵심 문구(→ 제품명·문서명), 구조(도식 레이어·카드 / 문서의 장·기능 묶음).
 - `[ ]` = **자동 도출해 PRD 에 반영**: 2~6항 — 단위 분해(units.py), FR·화면·스택·유사 시스템·패키징/릴리스. 사용자 요청문에 다른 번호 항목이 있으면 그대로 1.1 대응표·21.2 추적표에 넣는다.
@@ -54,7 +55,9 @@ OUT/<Brand>_assets/
 ├── inputs/ (IN-NN.* 입력 사본 · 사이트 텍스트 발췌)   source_infographic.png (구조 도식이 있을 때)
 ├── research/(inputs.json _INPUTS.md req_items.tsv req_map.tsv _SPEC.md r1~r7_*.md stars_all.tsv user_repos.tsv stars_relevant.tsv repos_catalog.tsv repos.tsv)
 ├── units.py data.py data_fr.py ui_data.py prd_auto.py kitpath.py collect_repos.py build_prd.py part*.py figs.py fig*.png ui/ui_<S-ID>.png .venv/
-OUT/<Brand>_UI_assets/pptx/ (build_ui.py ui_screens_*.py)  (--ui-pptx)
+OUT/<Brand>_UI_assets/                       (--ui-pptx, SKILL_DIR/templates/prd/ui/ 사본)
+├── ui_design_data.py ui_spec.py               (제품별 내용 — 채운다)
+└── pptx/ build_ui.py(수정 금지) ui_ids.py AGENT_BRIEF.md ui_screens_<key>.py
 ```
 
 ## 절차
@@ -142,10 +145,22 @@ WVS_KIT=$KIT .venv/bin/python build_prd.py --pdf        # 게이트 실패 시 �
 ```
 ✅ 게이트 PASS · check PASS(빈 쪽 0, FR 전부 등장). 렌더 쪽을 열어 표 넘침·그림 겹침 확인.
 
-### 11. 화면설계서 pptx (`--ui-pptx`, 기본)
-- `references/prd-ui-design-doc.md` 구조(앞부속 → PART1 개요·IA·화면 목록·역할 매트릭스·흐름도·공통 가이드 → PART2 화면별 → PART3 부록 RTM)로 `<Brand>_UI_assets/pptx/build_ui.py` 작성,
-  `ui_lib.configure(system=SYSTEM, nav=…)`. 화면 스펙 `ui_screens_<x>.py` 는 그룹별 서브에이전트 병렬(화면 3~4개마다 저장, 담당 화면 전부·순서 유지, fr 전부가 items 연계 열에 등장).
-- 빌드 assert: 화면 ID 누락·중복 0, PRD 추적 일치, 기능 표 연계 누락 0, FR 전수 커버. → `bash $KIT/docx2pdf.sh <Brand>_UI_Design.pptx` → 모든 쪽 렌더 확인.
+### 11. 화면설계서 pptx (`--ui-pptx`, 기본) — 표준 빌더 템플릿으로만 만든다
+양식은 고정(ObservaMesh·AegisMesh 화면설계서와 동일): 표지 → 문서 정보·개정 이력 → 목차 → PART 1(1 시스템 개요 · 2 화면 ID 명명 규칙 · IA ①② · 화면 목록 ·
+사용자×화면 매트릭스 · 화면 흐름도 ①~ · 공통 UI 가이드 2장 · 사용자 유형·모드 적응) → PART 2 화면별 → PART 3 부록 A~F. 상세: `references/prd-ui-design-doc.md`.
+```bash
+mkdir -p "$OUT/<Brand>_UI_assets" && cp -R $SKILL_DIR/templates/prd/ui/. "$OUT/<Brand>_UI_assets/"      # 빌더·예시·지침 복사
+#  채우기: ui_spec.py({ } 자리 전부) · ui_design_data.py(USERS·_DESC·COMPONENTS·STATES·MESSAGES) · pptx/ui_ids.py(FILES = 키 → 그룹 코드)
+cd "$OUT/<Brand>_UI_assets/pptx"
+<venv>/bin/python build_ui.py --stub         # 화면 스펙 전 구조·assert 확인 → ../stub_<Brand>_UI_Design.pptx
+#  화면 스펙 ui_screens_<key>.py: 그룹별 서브에이전트 병렬 — 각자 pptx/AGENT_BRIEF.md + ui_screens_example.py 를 먼저 읽는다
+WVS_KIT=$KIT <venv>/bin/python build_ui.py --pdf     # → $OUT/<Brand>_UI_Design.pptx/.pdf, 저장 직후 check_ui_design.py 자동 실행(FAIL 이면 중단)
+<venv>/bin/python $KIT/check_ui_design.py "$OUT/<Brand>_UI_Design.pptx" --pdf --render /tmp/ui_pages
+```
+- **금지**: `build_ui.py`·`ui_lib.py` 수정, 빌더를 새로 작성, 다른 슬라이드 구성·화면 ID 체계(`SCR-…`·`S0nn` 등 PRD 15.4 와 다른 ID). 제품별 차이는 `ui_spec.py`·`ui_design_data.py`·`ui_screens_<key>.py` 에만 둔다.
+- 빌드 assert: 화면 ID 누락·중복 0, PRD 추적·우선순위 = 화면 목록 정본, 기능 표 연계 누락 0, 콜아웃 수 = items 수, FR 전수 커버, IA 가 모든 그룹 포함, 흐름도 ≥1.
+- 게이트 `check_ui_design.py` PASS 필수: 슬라이드 순서(앞부속·PART 1 9절·PART 2·부록 A~F) · 화면 슬라이드 밀도(도형 ≥25·콜아웃 ≥5) · 표준 빌더 표식 · `build_ui.py` 가 템플릿과 동일.
+  FAIL 이면 완료 보고하지 않는다. 렌더된 모든 쪽을 열어 겹침·넘침·콜아웃 위치를 확인.
 
 ### 12. 보고
 경로(docx·pdf·pptx·pdf) · 입력 종류별 수 · RQ 수(추적 대상/매핑) · 단위 수 · FR 수(P0/P1/P2) · 화면 수 · 실측 저장소/스타 교차 수 · 게이트 결과 · 주요 결정·입력 간 충돌 5줄 · [미확인] 개수.

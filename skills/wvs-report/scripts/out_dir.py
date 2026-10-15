@@ -3,6 +3,8 @@
 """wvs-report 출력 폴더 결정 규칙 (정본) — deep · prd 공통.
 
   --out-dir 지정 시        → 그 폴더(상대 경로면 <root> 기준, 없으면 만든다)
+                             단, 값이 기본 폴더 이름 그 자체(예: "Need-to-be-organized-into-PRD")면 아래 기본 규칙과 같다 —
+                             요청문의 "PRD 는 Need-to-be-organized-into-PRD 이하에 작성" 같은 문구는 기본 규칙이지 생성 지시가 아니다.
   기본 폴더가 <root> 에 있음 → <root>/<기본 폴더>      deep: Miscellaneous-Data · prd: Need-to-be-organized-into-PRD
   기본 폴더가 없음          → <root> 바로 아래        (기본 폴더를 새로 만들지 않는다)
 
@@ -18,6 +20,8 @@ DEFAULT = {"deep": "Miscellaneous-Data", "prd": "Need-to-be-organized-into-PRD"}
 
 def resolve(mode, root=".", out_dir=None):
     root = os.path.abspath(os.path.expanduser(root))
+    if out_dir and os.path.normpath(out_dir).strip("/\\") in DEFAULT.values():
+        out_dir = None                                   # 기본 폴더 이름 = 기본 규칙(없으면 만들지 않는다)
     if out_dir:
         p = out_dir if os.path.isabs(os.path.expanduser(out_dir)) else os.path.join(root, out_dir)
         p = os.path.abspath(os.path.expanduser(p))

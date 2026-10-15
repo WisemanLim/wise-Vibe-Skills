@@ -14,16 +14,24 @@
         ⑱ 입출력 항목(항목명/컨트롤/타입·길이/속성/Validation) ⑲ 처리 내용(이벤트별) ⑳ 화면 전이 ㉑ 유효성 규칙 ㉒ 오류·예외·메시지
 [추적] ㉓ 요구사항 ↔ 화면 추적표 ㉔ 미커버 점검 ㉕ 개정 이력과 화면 목록 변경 표기 일치
 
-## 3. pptx 슬라이드 구성 (ui_lib.py)
+## 3. pptx 슬라이드 구성 — 표준 빌더 `templates/prd/ui/pptx/build_ui.py` (수정 금지)
+양식 기준 문서: ObservaMesh·AegisMesh·AgentNexus `_UI_Design.pptx`(빌더 도입 전 문서, `check_ui_design.py --legacy` PASS). 이 순서·배치를 빌더가 고정한다.
 | 구간 | 슬라이드 |
 |---|---|
 | 앞부속 | 표지(NAVY 배경, 기준 PRD 파일명·FR 수·화면 수·버전) · 문서 정보·개정 이력 · 목차 |
-| PART 1 개요·구조 | 1 시스템 개요 · 원본 도식 = 정보 구조 / 2 화면 ID 명명 규칙·슬라이드 구성 / 3~4 IA(내비 그룹 = 도식 레이어) / 5 화면 목록(페이지 분할) / 6 역할 × 화면 매트릭스 / 7 화면 흐름도 / 8 공통 UI 가이드(레이아웃·토큰·컴포넌트) / 9 상태·메시지·유효성·오류 처리(ST-xx·MSG-xxx) |
+| PART 1 개요·구조 | 1 시스템 개요 · 원본 도식 = 정보 구조 / 2 화면 ID 명명 규칙·슬라이드 구성 / 3~4 IA(내비 그룹 = 도식 레이어) / 5 화면 목록(페이지 분할) / 6 사용자 × 화면 매트릭스 / 7-①~ 화면 흐름도 / 8 공통 UI 가이드(레이아웃·토큰·컴포넌트) / 9 공통 UI 가이드(상태·메시지·유효성·오류, ST-xx·MSG-xxx) / 10 사용자 유형·운용 모드별 UI 적응 (IA 장 수에 따라 번호 이동) |
 | PART 2 화면별 설계 | 그룹(section_slide)마다 화면 1개 = 슬라이드 1개(`screen_slide`): 상단 메타표 + 설명 + 좌 와이어프레임(①②③ 콜아웃) + 우 기능 설명 표(No·구성요소·유형·기능 설명/동작·연계) + 하단 관련 FR + 발표자 노트 |
 | PART 3 부록 | A 위저드·모달 카탈로그 · B 메시지 정의(ko/en) · C 요구사항 추적표(RTM, FR ↔ 화면, 미커버 0) · D 비화면 요구의 표출 위치 · E PRD 화면 ↔ 설계서 화면 ID · F 참고 자료·한계 |
 
-## 4. 화면 명세 데이터 (ui_data.py · ui_screens_*.py)
-- `SCREENS` 튜플: `(ID, 화면명, 라우트, 권한, PRD추적(공백 구분 FR ID), 우선순위, 유형 P/M/W, 목적(영역별 구성 — 상호작용), PRD 화면 S-ID)`
+## 4. 화면 명세 데이터 (`templates/prd/ui/` → `<Brand>_UI_assets/`)
+| 파일 | 내용 | 누가 |
+|---|---|---|
+| `ui_design_data.py` | PRD `<Brand>_assets/ui_data.py`(SCREENS·GROUPS)·`data_fr.py`(FR) 를 그대로 import + USERS·그룹 설명·COMPONENTS·STATES·MESSAGES | 메인 |
+| `ui_spec.py` | 제품별 문구·표(NAV·SHELL·DOC_INFO·OVERVIEW·ID_RULES·IA·MATRIX·FLOWS·TOKENS·FEEDBACK·VALIDATION·ERRORS·ADAPT·NONUI·SCENARIOS·REFS) — `{ }` 전부 채움 | 메인 |
+| `pptx/ui_ids.py` | `FILES = {key: [그룹 코드…]}` — 서브에이전트 분담 | 메인 |
+| `pptx/ui_screens_<key>.py` | 화면 스펙(`pptx/AGENT_BRIEF.md`·`ui_screens_example.py` 형식) | 그룹별 서브에이전트 |
+| `pptx/build_ui.py` | 표준 빌더 — **수정하지 않는다** | — |
+- `SCREENS` 튜플(PRD ui_data 정본): `(ID, 화면명, 라우트, 권한, PRD추적(공백 구분 FR ID), 우선순위, 유형 P/M/W/T/C, 목적(영역별 구성 — 상호작용), 그룹 코드)` — 화면 ID 는 PRD 15.4 와 1:1
 - 화면 스펙(dict): `id, name, path, kind(페이지/모달/위저드), section, perm, prio, desc, fr[list], items[(No, 구성요소, 유형, 기능 설명/동작(검증·상태·전이·예외, 40~80자), 연계(FR·SCR·MSG·ST·CMP))], wire=callable(Wire), notes`
 - **fr 목록의 모든 ID 가 items 연계 열에 최소 한 번** 나와야 한다(빌드 assert). FR 이 많으면 한 행에 FR 2개를 묶는다.
 - 그룹 A(설치)는 `frame()` + `stepper()` (시작·모드·사전 점검·구성 요소·저장소·관리자/TLS·진행·완료).
@@ -37,7 +45,13 @@
 - 글자 4.4~7pt(라벨 4.4~5.2, 제목 7~8.5). 한 줄 폭 = 글자 수 × 1.1(%) 이상. 표 6행 이하(넘치면 "… 외 N건").
 - 색은 의미로만(주동작·정상·주의·오류·L3/외부·정보) + 배지에 텍스트 병기. 레이어 색 = 도식 레이어 색.
 - 콜아웃 번호 수 = items 수, 위치 = 해당 요소 좌상단.
-- 검사: 화면 3~4개마다 저장 → pptx → `docx2pdf.sh` → `check_report.py --render` 로 **모든 쪽 PNG 를 눈으로 확인**(겹침·넘침·콜아웃 위치).
+- 검사: 화면 3~4개마다 저장 → `build_ui.py --stub` → `check_ui_design.py ../stub_<Brand>_UI_Design.pptx --render DIR` 로 **모든 쪽 PNG 를 눈으로 확인**(겹침·넘침·콜아웃 위치).
+
+## 5-1. 양식 게이트 (`scripts/check_ui_design.py`, build_ui.py 가 저장 직후 자동 실행)
+- 슬라이드 순서: 표지 → 문서 정보·개정 이력 → 목차 → PART 1 → 1. → 2. 화면 ID 명명 규칙 → 메뉴 구조도(IA) → 화면 목록 → 사용자 × 화면 매트릭스 → 흐름도(n-①) → 공통 UI 가이드 레이아웃 → 상태 → 사용자 유형 → PART 2 → 화면 → PART 3 → A~F
+- 화면 슬라이드: 도형 ≥ 25(와이어프레임 밀도) · 콜아웃 ≥ 5
+- 표준 빌더: pptx `keywords = wvs-report/ui-design-template/1` + `<Brand>_UI_assets/pptx/build_ui.py` 가 스킬 템플릿과 바이트 동일
+- FAIL 이면 완료 보고 금지. `--legacy` 는 빌더 도입 전 문서 비교용(양식만 검사)
 
 ## 6. 출처 (조사 확보분)
 - CBD SW개발 표준 산출물 관리 가이드(2011.12) — https://www.cisp.or.kr/wp-content/uploads/2012/01/20160909_074634.pdf (D2 사용자 인터페이스 설계서, R3 요구사항 추적표)
