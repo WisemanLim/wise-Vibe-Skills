@@ -9,7 +9,7 @@ Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, Devin, OpenCod
 | 스킬 | 한 줄 요약 | 호출 예 (Claude Code) |
 |---|---|---|
 | **`wvs-review`** | 저장소 리뷰를 **레벨**로 — L1 구조 분석 · L2 +상용화(라이선스·보안·ISO 5230) · L3 +주니어/구현 가이드 · L4 +라인 단위 코드 리뷰, 스타 목록 일괄 분석 | `/wvs-review ./proj --level 2` |
-| **`wvs-report`** | 보고서·PRD를 **모드**로 — `repos`(클론+Summary-Repos) · `deep`(첨부 도식 상세 분석) · `prd`(보고서·요구사항 md·이미지·링크 기반 PRD + 화면설계서) → docx/pdf | `/wvs-report deep` (이미지 첨부) |
+| **`wvs-report`** | 보고서·PRD를 **모드**로 — `repos`(클론+Summary-Repos) · `deep`(첨부 이미지·파일(md)·사이트 상세 분석) · `prd`(보고서·요구사항 md·이미지·링크 기반 PRD + 화면설계서) → docx/pdf | `/wvs-report deep` (이미지 첨부) |
 | **`wvs-tools`** | 유틸리티 **단일 CLI** `wvs` — pdf · archive · clean · bookmarks · deploy ios/android · dist · doctor | `wvs pdf REPORT.md` |
 
 ---
@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 
 # 3) 사용 (Claude Code 예)
 /wvs-review ./my-repo                     # 구조 분석 + 상용화 심층 분석 (기본 L2)
-/wvs-report deep                          # 첨부 인포그래픽 → 상세 분석 보고서 docx/pdf
+/wvs-report deep                          # 첨부 이미지·파일(md)·사이트 → 상세 분석 보고서 docx/pdf
 wvs pdf docs/REPORT.md                    # 터미널: Mermaid 포함 Markdown → PDF
 ```
 
@@ -165,7 +165,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | 모드 | 입력 | 산출물 | 핵심 단계 |
 |---|---|---|---|
 | `repos` | 도구 목록 인포그래픽(이미지·링크) | `<root>/<Project>/NN-분류/도구/`(shallow clone) + `Summary-Repos.docx/.pdf` | 전사 → GitHub 매핑(이전 저장소 추적) → 실측(★·SPDX·릴리스·레지스트리) → 클론·트리 → 저장소별 조사 → 비교·선택 가이드·인포그래픽 검증 |
-| `deep` | 범주·패키지·개념 도식 | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 전사 → 조사 사양 → 병렬 조사(정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → (선택 실측 실험) → 도식 판정 종합 |
+| `deep` | 첨부 이미지(범주·패키지·개념 도식) · 첨부 파일(md 등) · 첨부 사이트 URL — 하나 이상, 섞어서 (이미지 없이도 동작) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 입력 보존(`prd_intake.py` → `inputs/`·입력 표) → 전사 → 조사 사양 → 병렬 조사(정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → (선택 실측 실험) → 도식 판정 종합 |
 | `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT 규칙 4.4) | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
 
 ### 4.2 `{ }` 와 `[ ]`
@@ -209,6 +209,8 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 ### 4.4 공통 규칙
 - **출력 폴더(OUT)** — `deep` 은 `<root>/Miscellaneous-Data`, `prd` 는 `<root>/Need-to-be-organized-into-PRD` 가 **있으면 그 안에**, **없으면 `<root>` 바로 아래에** 만든다(기본 폴더를 새로 만들지 않음). `--out-dir <dir>` 로 직접 지정할 수 있다. 규칙 정본: `wvs-report/scripts/out_dir.py`. 산출물과 `_assets/` 는 같은 OUT 에 놓인다.
   - 예) `~/wise-Analysis-Repos/Miscellaneous-Data/` 가 있으면 → `~/wise-Analysis-Repos/Miscellaneous-Data/OCR+PDF Extractors.docx`, 없으면 → `~/wise-Analysis-Repos/OCR+PDF Extractors.docx`
+  - `prd` 도 같은 구조 — `Need-to-be-organized-into-PRD/` 가 있으면 그 안, 없으면 `<root>` 바로 아래. `repos` 는 `<root>/<Project>/` 그대로.
+  - 빌드는 그림 파일·조사 블록이 빠져도 멈추지 않는다(`[미확인]` 표시 + `WARN:` 목록) — docx/pdf 는 항상 OUT 에 생성.
   - `prd` 에 분석 보고서를 이름만 주면 `<root>/Miscellaneous-Data/<이름>` → `<root>/<이름>` 순으로 찾는다.
 - 출처·라이선스·참고 이미지를 항상 명시한다(그림 캡션 출처, 저장소 ★·SPDX, 부록 출처 총람·그림 출처).
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외**한다 — 빌드 후 `check_report.py --forbid` 로 검사.

@@ -9,7 +9,7 @@ Installs into Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, 
 | Skill | What it does | Example (Claude Code) |
 |---|---|---|
 | **`wvs-review`** | Repository review by **level** — L1 structure · L2 +commercial (licenses, security, ISO 5230) · L3 +junior/implementation guides · L4 +line-by-line code review; bulk analysis of a GitHub star list | `/wvs-review ./proj --level 2` |
-| **`wvs-report`** | Reports and PRDs by **mode** — `repos` (clone + Summary-Repos) · `deep` (in-depth analysis of an attached diagram) · `prd` (PRD + UI design deck from reports, requirement docs, images and links) → docx/pdf | `/wvs-report deep` (attach an image) |
+| **`wvs-report`** | Reports and PRDs by **mode** — `repos` (clone + Summary-Repos) · `deep` (in-depth analysis of attached images, files (md) and sites) · `prd` (PRD + UI design deck from reports, requirement docs, images and links) → docx/pdf | `/wvs-report deep` (attach an image) |
 | **`wvs-tools`** | A **single CLI** `wvs` — pdf · archive · clean · bookmarks · deploy ios/android · dist · doctor | `wvs pdf REPORT.md` |
 
 Generated documents are written in Korean by default (with English where useful), matching the house report templates; prompts can be given in any language.
@@ -40,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 
 # 3) Use (Claude Code)
 /wvs-review ./my-repo                     # structure + commercial review (default L2)
-/wvs-report deep                          # attached infographic → in-depth report docx/pdf
+/wvs-report deep                          # attached images / files (md) / sites → in-depth report docx/pdf
 wvs pdf docs/REPORT.md                    # terminal: Markdown with Mermaid → PDF
 ```
 
@@ -167,7 +167,7 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 | Mode | Input | Output | Main steps |
 |---|---|---|---|
 | `repos` | Infographic listing tools (image/link) | `<root>/<Project>/NN-Category/Tool/` (shallow clones) + `Summary-Repos.docx/.pdf` | transcribe → map to GitHub (follows moved repos) → measure (stars, SPDX, releases, registries) → clone + trees → per-repo research → comparison, selection guide, infographic check |
-| `deep` | Diagram of categories / packages / concepts | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
+| `deep` | Attached images (category / package / concept diagrams) · attached files (md etc.) · attached site URLs — one or more, mixed (works without an image) | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | preserve inputs (`prd_intake.py` → `inputs/` + input table) → transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
 | `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT rule in 4.4) | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
 
 ### 4.2 `{ }` and `[ ]` in prompts
@@ -211,6 +211,8 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 ### 4.4 Shared rules
 - **Output folder (OUT)** — `deep` writes into `<root>/Miscellaneous-Data` and `prd` into `<root>/Need-to-be-organized-into-PRD` **when that folder exists**; **otherwise directly into `<root>`** (the default folder is never created). Override with `--out-dir <dir>`. The canonical rule is `wvs-report/scripts/out_dir.py`; the document and its `_assets/` folder always sit in the same OUT.
   - e.g. with `~/wise-Analysis-Repos/Miscellaneous-Data/` present → `~/wise-Analysis-Repos/Miscellaneous-Data/OCR+PDF Extractors.docx`; without it → `~/wise-Analysis-Repos/OCR+PDF Extractors.docx`
+  - `prd` follows the same layout — inside `Need-to-be-organized-into-PRD/` if it exists, otherwise directly in `<root>`. `repos` is unchanged (`<root>/<Project>/`).
+  - The build never stops on a missing figure file or research block (marked `[unverified]` + a `WARN:` list) — the docx/pdf is always written to OUT.
   - When `prd` gets an analysis report by name only, it looks in `<root>/Miscellaneous-Data/<name>` first, then `<root>/<name>`.
 - Sources, licenses and referenced images are always cited (figure captions, stars + SPDX for repositories, source and figure appendices).
 - **Previous documents used only as a format template are never cited** — checked after the build with `check_report.py --forbid`.

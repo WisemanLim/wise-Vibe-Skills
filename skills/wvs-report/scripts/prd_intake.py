@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""PRD 입력 수집·정규화 (wvs-report prd) — 여러 종류의 입력을 분류해 보존하고, 요구사항 문서에서 요구 항목(RQ)을 뽑는다.
+"""입력 수집·정규화 (wvs-report prd · deep) — 여러 종류의 입력을 분류해 보존하고, 요구사항 문서에서 요구 항목(RQ)을 뽑는다.
+deep 은 같은 방식으로 첨부 이미지·파일(md 등)·사이트를 <Title>_assets/inputs/ 에 보존한다(req_items.tsv 는 쓰지 않는다).
 
 입력 종류(자동 분류, 강제 지정 옵션 우선):
   report  분석 보고서 .docx/.pdf (+ 같은 이름 `<stem>_assets/` → research/·measured.json·source_infographic.png 재사용)
@@ -166,8 +167,8 @@ def main():
 
     A = os.path.abspath(a.assets); INP = os.path.join(A, "inputs"); RES = os.path.join(A, "research")
     if not os.path.isdir(os.path.dirname(A)):
-        sys.exit(f"ERROR: output folder '{os.path.dirname(A)}' does not exist — decide it with out_dir.py prd --root <root> "
-                 "(Need-to-be-organized-into-PRD 는 이미 있을 때만 쓰고 새로 만들지 않는다)")
+        sys.exit(f"ERROR: output folder '{os.path.dirname(A)}' does not exist — decide it with out_dir.py deep|prd --root <root> "
+                 "(Miscellaneous-Data · Need-to-be-organized-into-PRD 는 이미 있을 때만 쓰고 새로 만들지 않는다)")
     os.makedirs(INP, exist_ok=True); os.makedirs(RES, exist_ok=True)
     queue = []
     for it in a.inputs:

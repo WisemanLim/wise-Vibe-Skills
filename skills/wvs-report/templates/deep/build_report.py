@@ -66,9 +66,18 @@ def xref(body):
     return "\n".join(out)
 
 
+WARN = []   # 빌드는 계속하고 끝에 모아 알린다 — 그림·조사 블록 하나 빠졌다고 docx/pdf 가 안 나오면 안 된다
+
+
+def fig(path, width, caption, src):
+    if not os.path.isfile(r._abs(path)):
+        WARN.append(f"그림 없음(생략): {path}"); return
+    r.FIG(path, width, caption, src)
+
+
 def figs(lst):
     for f in lst or ():
-        r.FIG(f[0], f[2] if len(f) > 2 else 16.5, f[1], f[3] if len(f) > 3 else "본 보고서 작성")
+        fig(f[0], f[2] if len(f) > 2 else 16.5, f[1], f[3] if len(f) > 3 else "본 보고서 작성")
 
 
 def chapter(ch):
@@ -76,6 +85,10 @@ def chapter(ch):
     if ch.get("intro"): r.P(ch["intro"], size=9.3)
     for it in ch.get("blocks", []):
         tag, key = it[0], it[1]
+        if (tag, key) not in ALL:
+            WARN.append(f"조사 블록 없음: research/{tag}_*.md '# {key}'")
+            r.SEC(key); r.P(f"[미확인] 조사 블록 {tag}/{key} 누락 — research/{tag}_*.md 에 '# {key} …' 블록을 채운 뒤 다시 빌드한다.", size=9.2)
+            continue
         title, body = M.block(ALL, tag, key)
         r.SEC(title.split(" ", 1)[1] if " " in title else title)
         figs(it[2] if len(it) > 2 else None)
@@ -107,9 +120,19 @@ r.T(["장", "범주", "내용"], CFG["TOC_TABLE"], widths=r.W([1.2, 3, 12]), fon
 
 # ============================================================ 2 원문 도식 전수 정리
 r.CH("원문 도식 전수 정리")
-r.SEC("원본 도식")
+r.SEC("원본 자료")
 r.P(CFG["SOURCE_DESC"], size=9.3)
-r.FIG(CFG["SOURCE_IMAGE"], CFG.get("SOURCE_IMAGE_W", 12.5), CFG["SOURCE_CAPTION"], CFG["SOURCE_CREDIT"])
+# 입력 = 첨부 이미지 · 첨부 파일(md 등) · 첨부 사이트 — prd_intake.py 가 만든 research/inputs.json 인벤토리(있으면)
+INV = os.path.join(HERE, "research", "inputs.json")
+INV = [x for x in json.load(open(INV, encoding="utf-8")) if x.get("type") != "missing"] if os.path.exists(INV) else []
+if INV:
+    KIND = {"image": "이미지", "req": "문서", "report": "보고서", "github": "GitHub", "site": "사이트", "prompt": "요청문"}
+    r.T(["ID", "유형", "자료", "접근일"],
+        [[x["id"], KIND.get(x["type"], x["type"]), x["src"] if x["src"].startswith("http") else (x.get("title") or os.path.basename(x["src"])),
+          x.get("accessed", "")] for x in INV], widths=r.W([1.4, 1.8, 11.6, 2.4]), font=7.5)
+SRC_IMGS = CFG.get("SOURCE_IMAGES") or [(CFG.get("SOURCE_IMAGE", "source_infographic.png"), CFG.get("SOURCE_CAPTION", ""), CFG.get("SOURCE_CREDIT", ""))]
+for f in SRC_IMGS:   # 이미지가 없는 입력(md·사이트만)이면 건너뛴다
+    if os.path.isfile(r._abs(f[0])): r.FIG(f[0], f[3] if len(f) > 3 else CFG.get("SOURCE_IMAGE_W", 12.5), f[1], f[2])
 figs(CFG.get("RECON_FIGS"))
 for title, body in CFG.get("TRANSCRIPTION", []):   # [(절 제목, 마크다운 본문)] — 범주별 전사표·저장소 현행 대조 등
     r.SEC(title); M.render(r, body, size=9.2, sub_level=3)
@@ -197,3 +220,4 @@ r.H("부록 D. 그림 · 이미지 출처", 1)
 r.FIG_TABLE()
 
 r.SAVE(CFG["OUT"], pdf="--pdf" in sys.argv, group_min=3, line_max=100)
+for w in WARN: print("WARN:", w, file=sys.stderr)

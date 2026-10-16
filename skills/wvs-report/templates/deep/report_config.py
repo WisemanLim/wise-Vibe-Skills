@@ -26,6 +26,8 @@ CFG = dict(
     ],
     TOC_TABLE=[["1~2", "-", "개요, 원문 도식 전수 정리"], ["3", "{범주 1}", "…"]],
     SOURCE_DESC="원본 인포그래픽(가로×세로 px)은 … 배치를 설명한다. 아래는 원본이며, 그다음은 본 보고서가 다시 그린 재구성도다.",
+    # 입력 = 첨부 이미지 · 첨부 파일(md 등) · 첨부 사이트. 입력 표는 research/inputs.json(prd_intake.py)에서 자동 생성.
+    # 이미지가 여러 장이면 SOURCE_IMAGES=[(파일, 캡션, 출처)…], 이미지가 없으면(md·사이트만) 그림 없이 진행한다.
     SOURCE_IMAGE="source_infographic.png",
     SOURCE_CAPTION="원본 인포그래픽 '{제목}'",
     SOURCE_CREDIT="{원저작자} · 사용자 첨부 이미지, 분석 목적 인용",

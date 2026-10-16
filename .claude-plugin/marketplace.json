@@ -9,7 +9,7 @@
       "name": "wise-vibe-skills",
       "source": "./",
       "description": "wise-Vibe-Skills skill set for Claude Code (namespaced as /wise-vibe-skills:<skill>).",
-      "version": "0.3.1"
+      "version": "0.3.2"
     }
   ]
 }
