@@ -41,14 +41,20 @@ Arguments: $ARGUMENTS
 - 출력 폴더는 항상 `out_dir.py` 결과. 요청문의 "Miscellaneous-Data/…로 생성"·"Need-to-be-organized-into-PRD 이하에 작성" 은 이 규칙(있으면 그 안, 없으면 `<root>`)이며 폴더를 만들라는 뜻이 아니다.
 - 준비: `bash $KIT/setup_env.sh <assets>`(venv: python-docx·python-pptx·matplotlib·pymupdf), `gh auth status`, LibreOffice(`soffice`).
 
-## 5. 공통 규칙 (세 모드 공통)
+## 5. 품질 게이트 — 호스트 무관 (반드시)
+어느 에이전트(Claude Code·Claude Desktop·Codex·Cursor·Gemini CLI·Windsurf·Devin·OpenCode·Antigravity·Copilot CLI·Command Code·Grok Build·OMP·VS Code)에서든 같은 품질을 내도록, 품질은 스크립트 게이트로 판정한다. 규약: `references/host-compat.md`.
+- 시작 시 `호스트 능력: 서브에이전트 O/X · 웹 검색 O/X · 셸 O/X → 병렬|순차 모드` 한 줄 보고. 서브에이전트가 없으면 **순차 모드**(조사 단위 하나씩 작성 → 단위 게이트 → 다음).
+- 템플릿(`_SPEC.md` 등)은 **복사해 채운다 — 요약·압축 금지**. 조사 전에 **사전 웹 확인**(제목·제품 실존·현행 상태, 1차 출처 URL 3건+). 웹 도구가 없으면 `curl`·`gh api`.
+- `deep` 게이트: `scripts/check_research.py --assets <A> --stage spec` → 단위마다 `--unit rN_x.md` → `--stage research` → `--stage final` → `check_report.py … --min-pages 40 --min-tables 50`. **PASS 전에는 다음 단계로 가지 않는다.** 근거가 없어 못 채운 FAIL 은 지어내지 말고 사유와 함께 보고.
+
+## 6. 공통 규칙 (세 모드 공통)
 - **출처·라이선스·참고 이미지 항상 명시** — 원본 첨부 이미지 캡션 출처 "원저작자 · 사용자 첨부 이미지, 분석 목적 인용", 저장소는 ★·SPDX 병기, 부록에 출처 총람·그림 출처.
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외** — `check_report.py --forbid "<이전 문서명>"` 로 확인.
 - 1차 출처 우선, 확인 못 한 사실 `[미확인]`, 업계 일반 가정 `[도메인]`. 실존 확인 안 된 저장소·논문은 쓰지 않는다(`verify_sources.py`, `gh_probe.py`).
 - 조사는 서브에이전트 병렬(없으면 순차), 블록·절 하나 끝낼 때마다 파일 저장.
 - 완료 전 `check_report.py <docx> --pdf <pdf> --render <dir>` PASS(화면설계서는 `check_ui_design.py <pptx> --pdf --render <dir>` PASS) + 렌더 쪽 육안 확인. 최종 보고: 경로·장/쪽 수·검증 수·핵심 판정 5줄.
 
-## 6. 예시
+## 7. 예시
 ```text
 /wvs-report repos --root ~/wise-Analysis-Repos                       (인포그래픽 첨부)
 /wvs-report repos --categories "Model & Data Security, Data Visualization"
@@ -58,7 +64,7 @@ Arguments: $ARGUMENTS
 /wvs-report prd direction.md --links refs.txt --name GovScout                (보고서 없이 요구사항 문서 + 참고 링크)
 ```
 
-## 7. 구 커맨드 대응
+## 8. 구 커맨드 대응
 | 구 커맨드 | 새 호출 |
 |---|---|
 | `/oss-clone-analysis` | `/wvs-report repos` |

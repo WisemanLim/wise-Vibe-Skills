@@ -29,7 +29,8 @@ command -v soffice || ls /Applications/LibreOffice.app   # PDF 변환
 | `github_user_lists.py` | 사용자 Stars·Repositories 전수 → `stars_all.tsv`·`user_repos.tsv` | `github_user_lists.py WisemanLim -o research/` |
 | `wire_lib.py` | PRD 와이어프레임 PNG(matplotlib) — `configure(brand, nav, …)` `frame()` 위젯·차트 `save()` | PRD 15.5 |
 | `ui_lib.py` | 화면설계서 pptx(python-pptx) — `configure(system, nav, …)` `screen_slide(spec)` `Wire.shell()` | `<Brand>_UI_Design.pptx` |
-| `check_report.py` | 산출물 검사 — 장·표·그림 수, 금지 문자열(형식 참고 문서명), 필수 ID, PDF 빈 쪽, 쪽 PNG 렌더 | 빌드 후 반드시 |
+| `check_research.py` | 조사 깊이 게이트(호스트 무관) — `_SPEC.md` 필수 절·사전 웹 확인 URL·판정 후보·조사 단위 표, 블록 분량·필수 소제목·소제목 분량·구현 코드·판정 표·출처 수, final: measured·그림·`sample/` 실행 결과 | `check_research.py --assets <A> [--stage spec\|research\|final] [--unit rN_x.md]` |
+| `check_report.py` | 산출물 검사 — 장·표·그림 수, 금지 문자열(형식 참고 문서명), 필수 ID, PDF 빈 쪽, 쪽 PNG 렌더, `--min-pages`·`--min-tables` 분량 하한 | 빌드 후 반드시 |
 | `check_ui_design.py` | 화면설계서 양식 게이트 — 슬라이드 순서(앞부속·PART 1 9절·PART 2·부록 A~F)·화면 밀도·콜아웃·표준 빌더 표식·`build_ui.py` 템플릿 동일성, PDF 빈 쪽·렌더 | `templates/prd/ui/pptx/build_ui.py` 가 자동 실행 |
 
 ## 2. 문서 양식(이전 보고서와 동일)
@@ -43,4 +44,5 @@ US Letter · 여백 2.0cm · Normal 10pt · H1 16pt 1F3864(새 쪽) · H2 13pt 2
 - 확인 못 한 사실 `[미확인]`, 업계 일반 가정 `[도메인]`. 존재 확인 안 된 저장소·논문은 쓰지 않는다(`verify_sources.py`).
 - 한국어 본문, 고유명사·코드·명령·표준 용어는 원문 병기. 과장·홍보 문구·이모지 금지.
 - 조사 서브에이전트는 블록(절) 하나 끝낼 때마다 파일에 저장 — 몰아 쓰다 중단되면 소실.
-- 완료 전: `check_report.py <docx> --pdf <pdf> --render <dir>` → PASS + 렌더된 쪽을 직접 열어 겹침·넘침·빈 쪽 확인.
+- 완료 전: `check_report.py <docx> --pdf <pdf> --render <dir>` → PASS + 렌더된 쪽을 직접 열어 겹침·넘침·빈 쪽 확인. `deep` 은 `check_research.py` 게이트도 PASS(`references/host-compat.md`).
+- 서브에이전트가 없는 호스트는 순차 모드 — 조사 단위 하나씩 쓰고 단위 게이트 후 다음으로. 템플릿 요약·압축 금지.

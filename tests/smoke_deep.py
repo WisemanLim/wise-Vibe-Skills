@@ -39,7 +39,7 @@ def case(name, misc, inputs, drop=None):
     assert os.path.isfile(docx), docx
     if PDF: assert os.path.isfile(docx[:-5] + ".pdf")
     if drop: assert f"조사 블록 없음" in p.stderr and "source_infographic" not in p.stderr, p.stderr
-    run(sys.executable, os.path.join(KIT, "check_report.py"), docx, "--require", "원본 인포그래픽" if misc else "notes.md")
+    run(sys.executable, os.path.join(KIT, "check_report.py"), docx, "--require", "원본 인포그래픽" if misc else "OCR 도구")   # 입력 표는 md 제목을 싣는다
     return docx
 
 

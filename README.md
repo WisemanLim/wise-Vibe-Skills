@@ -165,7 +165,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | 모드 | 입력 | 산출물 | 핵심 단계 |
 |---|---|---|---|
 | `repos` | 도구 목록 인포그래픽(이미지·링크) | `<root>/<Project>/NN-분류/도구/`(shallow clone) + `Summary-Repos.docx/.pdf` | 전사 → GitHub 매핑(이전 저장소 추적) → 실측(★·SPDX·릴리스·레지스트리) → 클론·트리 → 저장소별 조사 → 비교·선택 가이드·인포그래픽 검증 |
-| `deep` | 첨부 이미지(범주·패키지·개념 도식) · 첨부 파일(md 등) · 첨부 사이트 URL — 하나 이상, 섞어서 (이미지 없이도 동작) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 입력 보존(`prd_intake.py` → `inputs/`·입력 표) → 전사 → 조사 사양 → 병렬 조사(정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → (선택 실측 실험) → 도식 판정 종합 |
+| `deep` | 첨부 이미지(범주·패키지·개념 도식) · 첨부 파일(md 등) · 첨부 사이트 URL — 하나 이상, 섞어서 (이미지 없이도 동작) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 입력 보존(`prd_intake.py` → `inputs/`·입력 표) → 전사 → **사전 웹 확인**·조사 사양 → 조사(병렬 또는 순차, 정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → **참조 구현 실행(`sample/`)** → (선택 실측 실험) → 도식 판정 종합 — 단계마다 **품질 게이트**(4.5) |
 | `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT 규칙 4.4) | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
 
 ### 4.2 `{ }` 와 `[ ]`
@@ -216,6 +216,22 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외**한다 — 빌드 후 `check_report.py --forbid` 로 검사.
 - 확인 못 한 사실은 `[미확인]`, 실존 확인 안 된 저장소·논문은 싣지 않는다(`gh_probe.py`, `verify_sources.py`).
 - 완료 전 산출물 검사(빈 쪽·필수 ID·금지 문자열)와 쪽 렌더 확인을 한다. 흐름: `deep` 결과를 `prd` 입력으로 쓴다.
+
+### 4.5 호스트 무관 품질 게이트 (`deep`)
+같은 입력이라도 에이전트에 따라 결과 깊이가 크게 달랐다(예: 같은 인포그래픽 2건 — 조사 원문 453줄·26쪽·표 26개 대 1,836~2,025줄·64~69쪽·표 89~114개). 원인은 ① 조사 사양 템플릿 요약·압축, ② 서브에이전트 없이 전 조사 단위를 한 번에 작성, ③ 웹 조사 생략(실존 제품을 `[미확인]` 처리), ④ 분량 규칙이 검증되지 않는 권고였던 점이다.
+v0.3.3 부터 품질을 모델 성실도가 아니라 **스크립트 게이트**로 판정한다 — Claude Code · Claude Desktop · Codex · Cursor · Gemini CLI · Windsurf · Devin · OpenCode · Antigravity · Copilot CLI · Command Code · Grok Build · OMP · VS Code 어디서든 같은 하한을 통과해야 완료된다.
+
+| 단계 | 게이트 | 검사 내용 |
+|---|---|---|
+| 시작 | 호스트 능력 보고 | `서브에이전트 O/X · 웹 검색 O/X · 셸 O/X → 병렬\|순차 모드`. 서브에이전트가 없으면 조사 단위를 하나씩 쓰고 단위마다 게이트 |
+| 조사 사양 | `check_research.py --stage spec` | `_SPEC.md` 필수 절 7개·50줄 이상(요약 금지), 전사 항목, **사전 웹 확인 1차 출처 URL 3건+**, 도식 특화 판정 후보 4개+, 조사 단위 표(KEY `PREFIX_NAME`) |
+| 조사 단위 | `check_research.py --unit rN_x.md` | 항목 블록 70줄+·필수 소제목 전부·소제목 3줄+·구현/사용방법 코드+12줄·소스 저장소 실측 표·판정 표 3행+, 기타 블록 35줄+·소제목 3개+, 참고문헌 블록당 3건+(STD 는 URL) |
+| 마무리 | `check_research.py --stage final` | 저장소·논문 검증 실패 0, 그림 3개+, `sample/` 참조 구현 코드 + 실행 결과(`--no-sample` 로만 생략) |
+| 빌드 후 | `check_report.py --min-pages 40 --min-tables 50` | 쪽·표 수 하한, 빈 쪽, 금지 문자열 |
+
+- 게이트 기준치는 양호 보고서(PASS)와 저품질 보고서(FAIL 139~165건)를 실제로 갈라 정했다. FAIL 줄마다 위치(파일·블록·소제목)와 보강 지시가 나온다.
+- 근거가 없어 채울 수 없는 FAIL 은 지어내지 않고 사유와 함께 최종 보고에 남긴다. 규약 전문: `skills/wvs-report/references/host-compat.md`.
+- 호스트 팁: 서브에이전트·웹 검색 도구가 있으면 켠다. Cursor·Windsurf 등은 상위 추론 모델·긴 컨텍스트 모드를 권장. 웹 도구가 없으면 `curl`·`gh api` 로 대체한다.
 
 ---
 
@@ -286,6 +302,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | 스킬이 목록에 안 보임 | 에이전트를 **새 세션**으로 재시작. `npx wise-vibe-skills doctor` 로 설치 위치 확인. 목록에 없는 에이전트는 `--dir` |
 | `curl … install.sh` 404 | 저장소가 비공개(또는 미배포). curl 은 gh 인증을 쓰지 않는다 → 2.1 의 `gh api … install.sh \| bash` 또는 `gh repo clone` 후 `./install.sh` |
 | `/analysis-source` 등 구 커맨드가 중복 표시 | `~/.claude/commands/<구 이름>.md` 를 직접 삭제(설치기는 경고만 함) |
+| `deep` 보고서가 얕음(쪽·표 적음, 소제목 한 줄) | `python3 <스킬폴더>/wvs-report/scripts/check_research.py --assets "<제목>_assets" --stage final` 로 얕은 블록을 찾아 해당 조사 단위만 보강 후 재빌드(4.5) |
 | `wvs-report/scripts 를 찾을 수 없습니다` | 빌드 스크립트가 툴킷을 못 찾음 → `export WVS_KIT=<스킬폴더>/wvs-report/scripts` |
 | GitHub 실측이 느리거나 실패 | `gh auth login`(인증 시 시간당 5,000회). 미인증 익명 API 는 시간당 60회 |
 | PDF 변환 실패(docx) | LibreOffice 설치: macOS `brew install --cask libreoffice` · Debian `sudo apt-get install -y libreoffice-writer libreoffice-impress` |
@@ -302,13 +319,13 @@ bin/wise-vibe-skills.mjs         npx 설치기 (install · uninstall · list · 
 .claude-plugin/                  Claude Code 플러그인·마켓플레이스 매니페스트
 skills/
 ├── wvs-review/   SKILL.md · references/{structure,commercial,guide,code,bulk-stars}.md
-├── wvs-report/   SKILL.md · references/{repos,deep,prd,kit,…}.md · scripts/(docx 엔진·검증·클론·와이어프레임·pptx·검사) · templates/{repos,deep,prd}/
+├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/(docx 엔진·검증·클론·와이어프레임·pptx·조사 깊이 게이트·검사) · templates/{repos,deep,prd}/
 └── wvs-tools/    SKILL.md · references/{pdf,scripts,dist}.md · scripts/wvs · scripts/lib/*.sh
-tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_prd.py
+tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_deep.py · smoke_research.py · smoke_prd.py · smoke_ui.py
 ```
 
 - **설계**: `SKILL.md` 는 짧은 라우터(레벨·모드·작업 선택)이고, 세부 절차는 해당 파트를 실행할 때만 `references/` 에서 읽는다(필요한 만큼만 컨텍스트 사용).
-- **테스트**: `bash tests/run.sh` — 메타데이터·문법·shellcheck·설치기 bash/npx 경로 동일성·설치/구 버전 정리/제거·bin 링크·zip·`wvs` 디스패치·보고서 툴킷 스모크 빌드(docx/pptx/pdf)·PRD 다중 입력 스모크(입력 분류·RQ 추적·게이트 통과/실패). `WVS_TEST_PY=<venv python>` 으로 venv 재사용.
+- **테스트**: `bash tests/run.sh` — 메타데이터·문법·shellcheck·설치기 bash/npx 경로 동일성·설치/구 버전 정리/제거·bin 링크·zip·`wvs` 디스패치·보고서 툴킷 스모크 빌드(docx/pptx/pdf)·조사 깊이 게이트(얕은 조사 FAIL·충실한 조사 PASS)·PRD 다중 입력 스모크(입력 분류·RQ 추적·게이트 통과/실패). `WVS_TEST_PY=<venv python>` 으로 venv 재사용.
 - **업로드 제외**: `.gitignore` 가 OS 파일(.DS_Store·Thumbs.db), 개인 개발 환경(.vscode·.idea·*.code-workspace·.env·.venv), 에이전트 세션·대화 기록(.claude/·.codex/·.gemini/·.cursor/·.omc/·*.jsonl·sessions/), 리뷰/보고서 산출물(.review/), 서명·자격증명(*.p8·*.keystore·서비스 계정 JSON)을 제외한다. `.gitattributes` 로 셸 스크립트 LF 를 고정한다.
 - **릴리스**: `VERSION` · `package.json` · `.claude-plugin/*.json` · `wvs` 의 `VERSION` 을 함께 올림 → `bash tests/run.sh` → 커밋 → `git tag vX.Y.Z && git push --tags` → (선택) `npm publish`.
 

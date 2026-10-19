@@ -167,7 +167,7 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 | Mode | Input | Output | Main steps |
 |---|---|---|---|
 | `repos` | Infographic listing tools (image/link) | `<root>/<Project>/NN-Category/Tool/` (shallow clones) + `Summary-Repos.docx/.pdf` | transcribe → map to GitHub (follows moved repos) → measure (stars, SPDX, releases, registries) → clone + trees → per-repo research → comparison, selection guide, infographic check |
-| `deep` | Attached images (category / package / concept diagrams) · attached files (md etc.) · attached site URLs — one or more, mixed (works without an image) | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | preserve inputs (`prd_intake.py` → `inputs/` + input table) → transcribe → research spec → parallel research (definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → (optional hands-on experiment) → diagram verdicts |
+| `deep` | Attached images (category / package / concept diagrams) · attached files (md etc.) · attached site URLs — one or more, mixed (works without an image) | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | preserve inputs (`prd_intake.py` → `inputs/` + input table) → transcribe → **pre-research web check** + research spec → research (parallel or sequential: definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → **run a reference implementation (`sample/`)** → (optional hands-on experiment) → diagram verdicts — with a **quality gate** at each step (4.5) |
 | `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT rule in 4.4) | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
 
 ### 4.2 `{ }` and `[ ]` in prompts
@@ -218,6 +218,22 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 - **Previous documents used only as a format template are never cited** — checked after the build with `check_report.py --forbid`.
 - Unverified facts are marked `[미확인]` (unverified); repositories and papers that cannot be verified are left out (`gh_probe.py`, `verify_sources.py`).
 - Before finishing, the output is checked (blank pages, required IDs, forbidden strings) and rendered pages are inspected. Pipeline: the `deep` result is the input to `prd`.
+
+### 4.5 Host-independent quality gates (`deep`)
+The same input produced very different depth depending on the agent (e.g. two infographics: 453 lines of research, 26 pages, 26 tables versus 1,836–2,025 lines, 64–69 pages, 89–114 tables). The causes were (1) the research-spec template being summarised and compressed, (2) every research unit being written in one pass without subagents, (3) web research being skipped (a real product was marked `[미확인]`), and (4) length rules that were advice nobody checked.
+From v0.3.3 quality is decided by **script gates**, not by how diligent the model is. A run on Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, Devin, OpenCode, Antigravity, Copilot CLI, Command Code, Grok Build, OMP or VS Code is finished only when it passes the same floors.
+
+| Step | Gate | Checks |
+|---|---|---|
+| Start | Host capability line | `subagents Y/N · web search Y/N · shell Y/N → parallel\|sequential mode`. Without subagents, research units are written one at a time with a gate after each |
+| Research spec | `check_research.py --stage spec` | `_SPEC.md` has the 7 required sections and 50+ lines (no summarising), transcription items, **3+ primary-source URLs in the pre-research web check**, 4+ diagram-specific verdict candidates, the unit table (keys `PREFIX_NAME`) |
+| Each unit | `check_research.py --unit rN_x.md` | item blocks 70+ lines with every required subheading, 3+ lines per subheading, code and 12+ lines under usage/implementation, a measured repository table, a verdict table with 3+ rows; other blocks 35+ lines and 3+ subheadings; 3+ references per block (URLs for non-arXiv sources) |
+| Wrap-up | `check_research.py --stage final` | no failed repository or paper checks, 3+ figures, `sample/` reference code plus its run output (skip only with `--no-sample`) |
+| After build | `check_report.py --min-pages 40 --min-tables 50` | page and table floors, blank pages, forbidden strings |
+
+- The thresholds were set by running the gate on a good report (PASS) and a shallow one (139–165 FAIL lines). Each FAIL line names the file, block and subheading and says what to add.
+- A FAIL that cannot be fixed because no evidence exists is reported with the reason, never padded with invented content. Full protocol: `skills/wvs-report/references/host-compat.md`.
+- Host tips: enable subagents and web search where the host has them. On Cursor, Windsurf and similar, prefer a stronger reasoning model and long-context mode. Without a web tool, fall back to `curl` and `gh api`.
 
 ---
 
@@ -288,6 +304,7 @@ Old option names (`--review-result`, `--pdf true|false`, `-O`) are still accepte
 | Skills do not show up | Restart the agent in a **new session**; check locations with `npx wise-vibe-skills doctor`; use `--dir` for unlisted agents |
 | `curl … install.sh` returns 404 | The repository is private (or not published). curl does not use gh credentials → use `gh api … install.sh \| bash` from 2.1, or `gh repo clone` and `./install.sh` |
 | Old commands such as `/analysis-source` appear twice | Delete `~/.claude/commands/<old-name>.md` yourself (the installer only warns) |
+| A `deep` report is shallow (few pages/tables, one-line subheadings) | Run `python3 <skills>/wvs-report/scripts/check_research.py --assets "<title>_assets" --stage final` to find the thin blocks, expand only those research units, then rebuild (4.5) |
 | `wvs-report/scripts 를 찾을 수 없습니다` (toolkit not found) | `export WVS_KIT=<skills>/wvs-report/scripts` |
 | GitHub measurements are slow or fail | `gh auth login` (5,000 requests/hour when authenticated vs. 60 anonymous) |
 | docx → PDF fails | Install LibreOffice: macOS `brew install --cask libreoffice` · Debian `sudo apt-get install -y libreoffice-writer libreoffice-impress` |
@@ -304,13 +321,13 @@ bin/wise-vibe-skills.mjs         npx installer (install · uninstall · list · 
 .claude-plugin/                  Claude Code plugin and marketplace manifests
 skills/
 ├── wvs-review/   SKILL.md · references/{structure,commercial,guide,code,bulk-stars}.md
-├── wvs-report/   SKILL.md · references/{repos,deep,prd,kit,…}.md · scripts/ (docx engine, verification, cloning, wireframes, pptx, checks) · templates/{repos,deep,prd}/
+├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/ (docx engine, verification, cloning, wireframes, pptx, research-depth gate, checks) · templates/{repos,deep,prd}/
 └── wvs-tools/    SKILL.md · references/{pdf,scripts,dist}.md · scripts/wvs · scripts/lib/*.sh
-tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_prd.py
+tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_deep.py · smoke_research.py · smoke_prd.py · smoke_ui.py
 ```
 
 - **Design**: each `SKILL.md` is a short router (level, mode, task); detailed procedures in `references/` are read only when that part runs, keeping context small.
-- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf) and a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing). Reuse a venv with `WVS_TEST_PY=<venv python>`.
+- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf), the research-depth gate (shallow research fails, thorough research passes) and a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing). Reuse a venv with `WVS_TEST_PY=<venv python>`.
 - **Kept out of the repo**: `.gitignore` excludes OS files (.DS_Store, Thumbs.db), personal environments (.vscode, .idea, *.code-workspace, .env, .venv), agent sessions and conversation logs (.claude/, .codex/, .gemini/, .cursor/, .omc/, *.jsonl, sessions/), review/report outputs (.review/) and signing material (*.p8, *.keystore, service-account JSON). `.gitattributes` pins LF line endings for shell scripts.
 - **Release**: bump `VERSION`, `package.json`, `.claude-plugin/*.json` and `VERSION` inside `wvs` together → `bash tests/run.sh` → commit → `git tag vX.Y.Z && git push --tags` → (optional) `npm publish`.
 
