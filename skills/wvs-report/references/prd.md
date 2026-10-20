@@ -162,8 +162,12 @@ WVS_KIT=$KIT <venv>/bin/python build_ui.py --pdf     # → $OUT/<Brand>_UI_Desig
 - 게이트 `check_ui_design.py` PASS 필수: 슬라이드 순서(앞부속·PART 1 9절·PART 2·부록 A~F) · 화면 슬라이드 밀도(도형 ≥25·콜아웃 ≥5) · 표준 빌더 표식 · `build_ui.py` 가 템플릿과 동일.
   FAIL 이면 완료 보고하지 않는다. 렌더된 모든 쪽을 열어 겹침·넘침·콜아웃 위치를 확인.
 
-### 12. 보고
-경로(docx·pdf·pptx·pdf) · 입력 종류별 수 · RQ 수(추적 대상/매핑) · 단위 수 · FR 수(P0/P1/P2) · 화면 수 · 실측 저장소/스타 교차 수 · 게이트 결과 · 주요 결정·입력 간 충돌 5줄 · [미확인] 개수.
+### 12. 자산 정리 (`--keep-assets` 면 생략)
+10·11단계 게이트 PASS 후: `python3 $KIT/prune_assets.py "$OUT/<Brand>_assets"` · `python3 $KIT/prune_assets.py "$OUT/<Brand>_UI_assets"`(각각 `--dry-run` 먼저).
+venv·와이어프레임/그림 PNG·캐시를 지우고 템플릿 사본 코드·research/·inputs/·requirements.txt·ASSETS.md 만 남긴다. 기초 보고서(deep)의 `_assets/` 는 건드리지 않는다.
+
+### 13. 보고
+경로(docx·pdf·pptx·pdf) · 입력 종류별 수 · RQ 수(추적 대상/매핑) · 단위 수 · FR 수(P0/P1/P2) · 화면 수 · 실측 저장소/스타 교차 수 · 게이트 결과 · 자산 정리(확보 용량) · 주요 결정·입력 간 충돌 5줄 · [미확인] 개수.
 
 ## 규칙
 - 각 FR 은 입력 내용(도식·요구사항 문서·시안)에 충실하고 그대로 구현 가능한 수준(하는 일 + 구현 요지(라이브러리·API·알고리즘·설정 키) + 우선순위 + 참고 OSS + 근거(RQ·IN·도식 요소)).

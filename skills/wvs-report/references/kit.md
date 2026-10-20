@@ -7,7 +7,7 @@
 ## 0. 환경 준비 (처음 1회, 보고서마다 venv 하나)
 ```bash
 KIT=<wvs-report>/scripts
-bash $KIT/setup_env.sh <assets_dir>          # → <assets_dir>/.venv (python-docx · python-pptx · matplotlib · pymupdf), 마지막 줄 = venv python
+bash $KIT/setup_env.sh <assets_dir>          # → <assets_dir>/.venv (python-docx · python-pptx · matplotlib · pymupdf + 있으면 requirements.txt), 마지막 줄 = venv python
 gh auth status                               # 저장소 실측(gh api) — 미인증이면 익명 API(시간당 60회)로 폴백
 command -v soffice || ls /Applications/LibreOffice.app   # PDF 변환
 ```
@@ -31,6 +31,7 @@ command -v soffice || ls /Applications/LibreOffice.app   # PDF 변환
 | `ui_lib.py` | 화면설계서 pptx(python-pptx) — `configure(system, nav, …)` `screen_slide(spec)` `Wire.shell()` | `<Brand>_UI_Design.pptx` |
 | `check_research.py` | 조사 깊이 게이트(호스트 무관) — `_SPEC.md` 필수 절·사전 웹 확인 URL·판정 후보·조사 단위 표, 블록 분량·필수 소제목·소제목 분량·구현 코드·판정 표·출처 수, final: measured·그림·`sample/` 실행 결과 | `check_research.py --assets <A> [--stage spec\|research\|final] [--unit rN_x.md]` |
 | `check_report.py` | 산출물 검사 — 장·표·그림 수, 금지 문자열(형식 참고 문서명), 필수 ID, PDF 빈 쪽, 쪽 PNG 렌더, `--min-pages`·`--min-tables` 분량 하한 | 빌드 후 반드시 |
+| `prune_assets.py` | 완료 후 `*_assets/` 를 재작업 최소 세트로 정리 — 코드·텍스트 데이터·원본 입력 유지, `.venv`·캐시·clone(.git)·생성 그림·영상·로그 삭제, `requirements.txt`(venv 동결)·`ASSETS.md`(정리 내역·재빌드 절차) 생성. 옆에 최종 docx/pptx 가 없으면 거부 | `prune_assets.py <assets> [--dry-run] [--drop-inputs]` |
 | `check_ui_design.py` | 화면설계서 양식 게이트 — 슬라이드 순서(앞부속·PART 1 9절·PART 2·부록 A~F)·화면 밀도·콜아웃·표준 빌더 표식·`build_ui.py` 템플릿 동일성, PDF 빈 쪽·렌더 | `templates/prd/ui/pptx/build_ui.py` 가 자동 실행 |
 
 ## 2. 문서 양식(이전 보고서와 동일)
@@ -45,4 +46,5 @@ US Letter · 여백 2.0cm · Normal 10pt · H1 16pt 1F3864(새 쪽) · H2 13pt 2
 - 한국어 본문, 고유명사·코드·명령·표준 용어는 원문 병기. 과장·홍보 문구·이모지 금지.
 - 조사 서브에이전트는 블록(절) 하나 끝낼 때마다 파일에 저장 — 몰아 쓰다 중단되면 소실.
 - 완료 전: `check_report.py <docx> --pdf <pdf> --render <dir>` → PASS + 렌더된 쪽을 직접 열어 겹침·넘침·빈 쪽 확인. `deep` 은 `check_research.py` 게이트도 PASS(`references/host-compat.md`).
+- 완료(게이트 전부 PASS) 후 `prune_assets.py <assets>` 로 자산 폴더 정리(`--keep-assets` 면 생략). 정리된 폴더 재작업: `ASSETS.md` 의 재빌드 절차.
 - 서브에이전트가 없는 호스트는 순차 모드 — 조사 단위 하나씩 쓰고 단위 게이트 후 다음으로. 템플릿 요약·압축 금지.

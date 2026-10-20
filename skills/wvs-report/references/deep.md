@@ -43,6 +43,7 @@ OUT/<Title>_assets/
 ├── exp/                        ← (--experiment) 실측 실험 코드·결과
 ├── report_config.py build_report.py p_*.py .venv/
 ```
+완료 후(9단계) `prune_assets.py` 가 `.venv/`·`fig_*.png`·영상·캐시·clone 을 지우고 코드·research/·measured.json·실측 JSON·원본 입력 + `requirements.txt`·`ASSETS.md` 만 남긴다.
 
 ## 절차
 `SKILL_DIR` = wvs-report 스킬 디렉토리, `KIT` = `SKILL_DIR/scripts`.
@@ -109,7 +110,12 @@ WVS_KIT=$KIT "<Title>_assets/.venv/bin/python" "<Title>_assets/build_report.py" 
    --forbid "<형식 참고 문서명>" --min-h1 10 --min-pages 40 --min-tables 50
 ```
 ✅ PASS·빈 쪽 0. 쪽·표 하한 FAIL 이면 `check_research.py` 로 얕은 블록을 찾아 보강 후 재빌드(분량을 채우려 지어내지 않는다). 렌더 쪽을 열어 표 넘침·코드 잘림·그림 겹침 확인.
-최종 보고: 경로·장 수·쪽 수·표 수·저장소/논문 검증 수·주요 도식 판정 5줄 + 호스트 능력·모드 + 게이트 결과(남은 FAIL·[미확인] 과 사유).
+
+### 9. 자산 정리 (`--keep-assets` 면 생략)
+8단계 PASS 후에만: `python3 $KIT/prune_assets.py "$OUT/<Title>_assets" --dry-run` 으로 목록 확인 → 같은 명령에서 `--dry-run` 빼고 실행.
+✅ `OK pruned` · `requirements.txt` · `ASSETS.md` 생성. 재작업(버전업)은 `ASSETS.md` 재빌드 절차(`setup_env.sh` → `figs.py` → `build_report.py --pdf`).
+
+최종 보고: 경로·장 수·쪽 수·표 수·저장소/논문 검증 수·주요 도식 판정 5줄 + 호스트 능력·모드 + 게이트 결과(남은 FAIL·[미확인] 과 사유) + 자산 정리 결과(확보 용량).
 
 ## 규칙
 - 1차 출처 우선, 수치는 출처 병기, 추측 금지. 저장소는 gh api 실측값, 논문은 arXiv 존재 확인된 것만.

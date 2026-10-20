@@ -86,7 +86,11 @@ WVS_KIT=$KIT _assets/.venv/bin/python _assets/build_summary.py --pdf
 _assets/.venv/bin/python $KIT/check_report.py Summary-Repos.docx --pdf Summary-Repos.pdf --render /tmp/sr_pages \
   --forbid "<템플릿 문서 경로/이름>" --min-h1 6
 ```
-✅ PASS, 빈 쪽 0. 렌더된 쪽을 열어 표 넘침·그림 겹침 확인 후 수정·재빌드. 최종 보고: 경로(docx·pdf)·분류/도구 수·클론 용량·이전/아카이브/라이선스 특이사항 5줄.
+✅ PASS, 빈 쪽 0. 렌더된 쪽을 열어 표 넘침·그림 겹침 확인 후 수정·재빌드. 
+### 8. 자산 정리 (`--keep-assets` 면 생략)
+7단계 PASS 후 `python3 $KIT/prune_assets.py <Project>/_assets`(`--dry-run` 먼저) — `_assets/` 의 venv·그림·캐시만 정리한다. 분류별 clone(`NN-Category/Tool/`)은 산출물이므로 지우지 않는다.
+
+최종 보고: 경로(docx·pdf)·분류/도구 수·클론 용량·이전/아카이브/라이선스 특이사항 5줄 + 자산 정리 결과.
 
 ## 규칙
 - 서술은 클론한 실제 파일 근거. 기억 의존 금지(버전·소유 조직·API 는 자주 바뀜). 실측값은 repos.tsv·packages.tsv 를 쓴다.

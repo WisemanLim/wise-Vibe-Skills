@@ -216,6 +216,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 - **형식(템플릿) 참고용 이전 문서는 출처에서 제외**한다 — 빌드 후 `check_report.py --forbid` 로 검사.
 - 확인 못 한 사실은 `[미확인]`, 실존 확인 안 된 저장소·논문은 싣지 않는다(`gh_probe.py`, `verify_sources.py`).
 - 완료 전 산출물 검사(빈 쪽·필수 ID·금지 문자열)와 쪽 렌더 확인을 한다. 흐름: `deep` 결과를 `prd` 입력으로 쓴다.
+- **완료 후 `*_assets/` 정리** — 게이트 전부 PASS 뒤 마지막 단계로 `prune_assets.py` 가 재작업 최소 세트만 남긴다(4.6). 보존하려면 `--keep-assets`.
 
 ### 4.5 호스트 무관 품질 게이트 (`deep`)
 같은 입력이라도 에이전트에 따라 결과 깊이가 크게 달랐다(예: 같은 인포그래픽 2건 — 조사 원문 453줄·26쪽·표 26개 대 1,836~2,025줄·64~69쪽·표 89~114개). 원인은 ① 조사 사양 템플릿 요약·압축, ② 서브에이전트 없이 전 조사 단위를 한 번에 작성, ③ 웹 조사 생략(실존 제품을 `[미확인]` 처리), ④ 분량 규칙이 검증되지 않는 권고였던 점이다.
@@ -232,6 +233,28 @@ v0.3.3 부터 품질을 모델 성실도가 아니라 **스크립트 게이트**
 - 게이트 기준치는 양호 보고서(PASS)와 저품질 보고서(FAIL 139~165건)를 실제로 갈라 정했다. FAIL 줄마다 위치(파일·블록·소제목)와 보강 지시가 나온다.
 - 근거가 없어 채울 수 없는 FAIL 은 지어내지 않고 사유와 함께 최종 보고에 남긴다. 규약 전문: `skills/wvs-report/references/host-compat.md`.
 - 호스트 팁: 서브에이전트·웹 검색 도구가 있으면 켠다. Cursor·Windsurf 등은 상위 추론 모델·긴 컨텍스트 모드를 권장. 웹 도구가 없으면 `curl`·`gh api` 로 대체한다.
+
+### 4.6 완료 후 자산 폴더 정리 (`prune_assets.py`)
+보고서 작업 중 `*_assets/` 에는 venv(수백 MB)·clone 저장소·다운로드 영상·생성 그림·캐시가 쌓인다. v0.3.4 부터 세 모드 모두 최종 docx/pptx/pdf 와 게이트가 PASS 한 뒤 **마지막 단계로 자산 폴더를 정리**한다 — 버전업·재작업에 필요한 최소 코드와 환경 정보만 남긴다.
+
+| 구분 | 대상 |
+|---|---|
+| 유지 | 코드(`build_*.py`·`report_config.py`·`p_*.py`·`figs.py`·`sample/`·`exp/`·PRD/UI 템플릿 사본) · 조사 원문 `research/` · `measured.json` · 실측 결과 JSON · 원본 입력(`inputs/`·`source_infographic.*`, 영상 제외) · `.wvs_kit` — 텍스트는 파일당 2MB 이하 |
+| 삭제 | `.venv` · `__pycache__`·각종 캐시 · `.omc` · `node_modules` · clone 저장소(`.git` 포함 폴더) · 생성 그림(`fig_*.png`·와이어프레임) · 영상 · 로그 · 중간 docx/pptx/pdf · 대용량 파일 |
+| 생성 | `requirements.txt`(삭제 전 venv 패키지 버전 동결) · `ASSETS.md`(정리일·최종 산출물·삭제 목록·재빌드 절차) |
+
+```bash
+KIT=<스킬폴더>/wvs-report/scripts
+python3 $KIT/prune_assets.py "<OUT>/<제목>_assets" --dry-run     # 지울 목록 확인
+python3 $KIT/prune_assets.py "<OUT>/<제목>_assets"               # 실행 (prd 는 <Brand>_assets · <Brand>_UI_assets 각각)
+
+# 재작업(버전업) — ASSETS.md 의 절차와 같다
+bash $KIT/setup_env.sh "<OUT>/<제목>_assets"                      # .venv 재생성 + requirements.txt 자동 설치
+(cd "<OUT>/<제목>_assets" && .venv/bin/python figs.py && WVS_KIT=$KIT .venv/bin/python build_report.py --pdf)
+```
+- 안전장치: 폴더 이름이 `*_assets` 가 아니거나 옆에 최종 docx/pptx 가 없으면 거부(`--force` 로 무시), git 저장소 거부, 심볼릭 링크는 따라가지 않음. 이미 정리된 폴더는 다시 실행해도 그대로(`ASSETS.md` 보존).
+- `repos` 모드의 분류별 clone(`<Project>/NN-분류/도구/`)은 산출물이므로 지우지 않는다 — `_assets/` 만 정리. `prd` 는 기초 보고서(deep)의 `_assets/` 를 건드리지 않는다.
+- 원본 입력까지 지우려면 `--drop-inputs`. 정리 결과(확보 용량)는 최종 보고에 한 줄로 남는다.
 
 ---
 
@@ -307,6 +330,8 @@ v0.3.3 부터 품질을 모델 성실도가 아니라 **스크립트 게이트**
 | GitHub 실측이 느리거나 실패 | `gh auth login`(인증 시 시간당 5,000회). 미인증 익명 API 는 시간당 60회 |
 | PDF 변환 실패(docx) | LibreOffice 설치: macOS `brew install --cask libreoffice` · Debian `sudo apt-get install -y libreoffice-writer libreoffice-impress` |
 | PDF 한글 깨짐 | Noto Sans CJK KR 설치 또는 `WVS_FONT="<글꼴명>"` |
+| 정리된 `*_assets` 를 다시 빌드 | `ASSETS.md` 의 재빌드 절차 — `setup_env.sh <assets>`(requirements.txt 설치) → `figs.py` → 빌드 스크립트 `--pdf` (4.6) |
+| `prune_assets.py` 가 거부(`no final docx/pptx`) | 보고서 빌드 전이거나 산출물 이름이 자산 폴더와 다름 → 빌드 후 실행, 의도한 경우 `--force` |
 | Windows 에서 `wvs` | Git Bash/WSL 에서 `bash <스킬폴더>/wvs-tools/scripts/wvs …` |
 
 ---
@@ -319,13 +344,13 @@ bin/wise-vibe-skills.mjs         npx 설치기 (install · uninstall · list · 
 .claude-plugin/                  Claude Code 플러그인·마켓플레이스 매니페스트
 skills/
 ├── wvs-review/   SKILL.md · references/{structure,commercial,guide,code,bulk-stars}.md
-├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/(docx 엔진·검증·클론·와이어프레임·pptx·조사 깊이 게이트·검사) · templates/{repos,deep,prd}/
+├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/(docx 엔진·검증·클론·와이어프레임·pptx·조사 깊이 게이트·검사·자산 정리) · templates/{repos,deep,prd}/
 └── wvs-tools/    SKILL.md · references/{pdf,scripts,dist}.md · scripts/wvs · scripts/lib/*.sh
 tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_deep.py · smoke_research.py · smoke_prd.py · smoke_ui.py
 ```
 
 - **설계**: `SKILL.md` 는 짧은 라우터(레벨·모드·작업 선택)이고, 세부 절차는 해당 파트를 실행할 때만 `references/` 에서 읽는다(필요한 만큼만 컨텍스트 사용).
-- **테스트**: `bash tests/run.sh` — 메타데이터·문법·shellcheck·설치기 bash/npx 경로 동일성·설치/구 버전 정리/제거·bin 링크·zip·`wvs` 디스패치·보고서 툴킷 스모크 빌드(docx/pptx/pdf)·조사 깊이 게이트(얕은 조사 FAIL·충실한 조사 PASS)·PRD 다중 입력 스모크(입력 분류·RQ 추적·게이트 통과/실패). `WVS_TEST_PY=<venv python>` 으로 venv 재사용.
+- **테스트**: `bash tests/run.sh` — 메타데이터·문법·shellcheck·설치기 bash/npx 경로 동일성·설치/구 버전 정리/제거·bin 링크·zip·`wvs` 디스패치·보고서 툴킷 스모크 빌드(docx/pptx/pdf)·조사 깊이 게이트(얕은 조사 FAIL·충실한 조사 PASS)·PRD 다중 입력 스모크(입력 분류·RQ 추적·게이트 통과/실패)·자산 정리(유지/삭제·requirements.txt·ASSETS.md·재실행·거부). `WVS_TEST_PY=<venv python>` 으로 venv 재사용.
 - **업로드 제외**: `.gitignore` 가 OS 파일(.DS_Store·Thumbs.db), 개인 개발 환경(.vscode·.idea·*.code-workspace·.env·.venv), 에이전트 세션·대화 기록(.claude/·.codex/·.gemini/·.cursor/·.omc/·*.jsonl·sessions/), 리뷰/보고서 산출물(.review/), 서명·자격증명(*.p8·*.keystore·서비스 계정 JSON)을 제외한다. `.gitattributes` 로 셸 스크립트 LF 를 고정한다.
 - **릴리스**: `VERSION` · `package.json` · `.claude-plugin/*.json` · `wvs` 의 `VERSION` 을 함께 올림 → `bash tests/run.sh` → 커밋 → `git tag vX.Y.Z && git push --tags` → (선택) `npm publish`.
 

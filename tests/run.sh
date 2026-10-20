@@ -46,6 +46,16 @@ python3 skills/wvs-report/scripts/prd_intake.py Rep --root "$O/without" --assets
 python3 skills/wvs-report/scripts/prd_intake.py Rep2 --root "$O/with" --assets "$O/a2" --no-fetch >/dev/null
 grep -q '"type": "report"' "$O/a1/research/inputs.json" && grep -q 'Miscellaneous-Data/Rep2.docx' "$O/a2/research/inputs.json" && pass "prd report lookup by name (Miscellaneous-Data → root)" || fail "prd report lookup by name (Miscellaneous-Data → root)"
 
+# assets pruning: keep code/research/inputs · drop venv/cache/clone/figures · requirements.txt + ASSETS.md · idempotent · refuse without final docx
+P="$H/prune"; A="$P/Rep_assets"; mkdir -p "$A/.venv/lib" "$A/__pycache__" "$A/clone/.git" "$A/research" "$A/inputs" "$A/sample/out" "$P/Bare_assets"
+echo x > "$A/.venv/lib/big"; echo x > "$A/__pycache__/a.pyc"; echo x > "$A/clone/a.py"; echo x > "$A/fig_a.png"; echo x > "$A/reel.mp4"; echo x > "$A/run.log"
+echo 'print(1)' > "$A/build_report.py"; echo '# r1' > "$A/research/r1_x.md"; echo x > "$A/inputs/IN-01.png"; echo '{}' > "$A/sample/out/r.json"; echo d > "$P/Rep.docx"
+pr() { python3 skills/wvs-report/scripts/prune_assets.py "$@"; }
+pr "$A" >/dev/null && [ -f "$A/build_report.py" ] && [ -f "$A/research/r1_x.md" ] && [ -f "$A/inputs/IN-01.png" ] && [ -f "$A/sample/out/r.json" ] \
+  && [ ! -e "$A/.venv" ] && [ ! -e "$A/__pycache__" ] && [ ! -e "$A/clone" ] && [ ! -e "$A/fig_a.png" ] && [ ! -e "$A/reel.mp4" ] && [ ! -e "$A/run.log" ] \
+  && grep -q python-docx "$A/requirements.txt" && grep -q '재빌드' "$A/ASSETS.md" && pr "$A" | grep -q 'nothing to prune' && grep -q 'fig_a.png' "$A/ASSETS.md" \
+  && ! pr "$P/Bare_assets" >/dev/null 2>&1 && ! pr "$P" >/dev/null 2>&1 && pass "prune_assets (keep · drop · requirements/ASSETS.md · idempotent · refusal)" || fail "prune_assets (keep · drop · requirements/ASSETS.md · idempotent · refusal)"
+
 W=skills/wvs-tools/scripts/wvs
 [ "$($W version)" = "$(tr -d ' \n' < VERSION)" ] && $W list >/dev/null && $W help clean >/dev/null && ! $W nope >/dev/null 2>&1 && pass "wvs CLI dispatch" || fail "wvs CLI dispatch"
 

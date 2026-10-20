@@ -1,6 +1,6 @@
 ---
 name: wvs-report
-description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 이미지·파일(md 등)·사이트의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, <제목>.docx — Miscellaneous-Data 폴더가 있으면 그 안, 없으면 루트, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
+description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 이미지·파일(md 등)·사이트의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, <제목>.docx — Miscellaneous-Data 폴더가 있으면 그 안, 없으면 루트, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF, 완료 후 *_assets 는 prune_assets.py 로 재작업 최소 세트(코드·조사 원문·실측 JSON·원본 입력·requirements.txt·ASSETS.md)만 남기고 정리. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
 ---
 
 # wvs-report — 보고서·PRD 생성 (repos · deep · prd)
@@ -27,6 +27,7 @@ Arguments: $ARGUMENTS
 | `--template <docx>` | 루트의 최근 같은 유형 문서 | 형식 참고(출처에 넣지 않음) |
 | `--no-pdf` | false | PDF 변환 생략 |
 | `--plan-only` | false | 전사·조사 사양(_SPEC.md)·카탈로그까지만 만들고 정지 |
+| `--keep-assets` | false | 완료 후 `*_assets/` 정리(`prune_assets.py`) 생략 — 디버깅·전체 보존이 필요할 때 |
 | `--out-dir <dir>` | 자동 | deep·prd 출력 폴더. 기본 폴더(`Miscellaneous-Data` · `Need-to-be-organized-into-PRD`)가 `<root>` 에 **있으면 그 안**, **없으면 `<root>` 바로 아래**에 만든다(기본 폴더를 새로 만들지 않음). 결정은 `python3 $KIT/out_dir.py deep|prd --root <root>` |
 모드별 옵션(`--project`·`--categories` / `--title`·`--axes`·`--experiment` / `--req`·`--image`·`--url`·`--links`·`--name`·`--github-user`·`--similar`·`--extra`·`--ui-pptx`)은 각 reference 의 인수 표.
 
@@ -53,6 +54,7 @@ Arguments: $ARGUMENTS
 - 1차 출처 우선, 확인 못 한 사실 `[미확인]`, 업계 일반 가정 `[도메인]`. 실존 확인 안 된 저장소·논문은 쓰지 않는다(`verify_sources.py`, `gh_probe.py`).
 - 조사는 서브에이전트 병렬(없으면 순차), 블록·절 하나 끝낼 때마다 파일 저장.
 - 완료 전 `check_report.py <docx> --pdf <pdf> --render <dir>` PASS(화면설계서는 `check_ui_design.py <pptx> --pdf --render <dir>` PASS) + 렌더 쪽 육안 확인. 최종 보고: 경로·장/쪽 수·검증 수·핵심 판정 5줄.
+- **완료 후 자산 정리(마지막 단계, `--keep-assets` 면 생략)**: 모든 게이트 PASS 뒤 `python3 $KIT/prune_assets.py <assets>`(prd 는 `<Brand>_assets`·`<Brand>_UI_assets` 각각) — `.venv`·캐시·clone·생성 그림·영상·로그를 지우고 코드(build·config·p_*·figs·sample/exp)·조사 원문(research/)·measured.json·실측 결과 JSON·원본 입력만 남기며 `requirements.txt`(동결 버전)·`ASSETS.md`(재빌드 절차) 생성. 재작업은 `setup_env.sh <assets>`(requirements.txt 자동 설치) → `figs.py` → 빌드. 게이트 FAIL 상태에선 정리하지 않는다. 결과(확보 용량)를 최종 보고에 한 줄.
 
 ## 7. 예시
 ```text

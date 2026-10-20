@@ -64,4 +64,4 @@
 ```
 
 ## 5. 최종 보고에 포함
-호스트 능력 한 줄 · 모드(병렬/순차) · `check_research.py --stage final` 결과 · `check_report.py` 결과(쪽·표·그림) · 저장소/논문 검증 수 · 남은 FAIL·[미확인] 과 사유.
+호스트 능력 한 줄 · 모드(병렬/순차) · `check_research.py --stage final` 결과 · `check_report.py` 결과(쪽·표·그림) · 저장소/논문 검증 수 · 남은 FAIL·[미확인] 과 사유 · `prune_assets.py` 정리 결과(또는 `--keep-assets`).

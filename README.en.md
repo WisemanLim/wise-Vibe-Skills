@@ -218,6 +218,7 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 - **Previous documents used only as a format template are never cited** — checked after the build with `check_report.py --forbid`.
 - Unverified facts are marked `[미확인]` (unverified); repositories and papers that cannot be verified are left out (`gh_probe.py`, `verify_sources.py`).
 - Before finishing, the output is checked (blank pages, required IDs, forbidden strings) and rendered pages are inspected. Pipeline: the `deep` result is the input to `prd`.
+- **`*_assets/` is pruned after completion** — once every gate passes, `prune_assets.py` keeps only the minimal set needed for rework (4.6). Pass `--keep-assets` to keep everything.
 
 ### 4.5 Host-independent quality gates (`deep`)
 The same input produced very different depth depending on the agent (e.g. two infographics: 453 lines of research, 26 pages, 26 tables versus 1,836–2,025 lines, 64–69 pages, 89–114 tables). The causes were (1) the research-spec template being summarised and compressed, (2) every research unit being written in one pass without subagents, (3) web research being skipped (a real product was marked `[미확인]`), and (4) length rules that were advice nobody checked.
@@ -234,6 +235,28 @@ From v0.3.3 quality is decided by **script gates**, not by how diligent the mode
 - The thresholds were set by running the gate on a good report (PASS) and a shallow one (139–165 FAIL lines). Each FAIL line names the file, block and subheading and says what to add.
 - A FAIL that cannot be fixed because no evidence exists is reported with the reason, never padded with invented content. Full protocol: `skills/wvs-report/references/host-compat.md`.
 - Host tips: enable subagents and web search where the host has them. On Cursor, Windsurf and similar, prefer a stronger reasoning model and long-context mode. Without a web tool, fall back to `curl` and `gh api`.
+
+### 4.6 Pruning the assets folder after completion (`prune_assets.py`)
+While a report is built, `*_assets/` collects a venv (hundreds of MB), cloned repositories, downloaded videos, generated figures and caches. From v0.3.4 all three modes **prune the assets folder as the last step**, after the final docx/pptx/pdf exists and every gate has passed, keeping only the code and environment information needed for a later version or rework.
+
+| | What |
+|---|---|
+| Kept | code (`build_*.py`, `report_config.py`, `p_*.py`, `figs.py`, `sample/`, `exp/`, PRD/UI template copies), research sources `research/`, `measured.json`, measured-result JSON, original inputs (`inputs/`, `source_infographic.*`, videos excluded), `.wvs_kit` — text files up to 2 MB each |
+| Deleted | `.venv`, `__pycache__` and other caches, `.omc`, `node_modules`, cloned repositories (folders containing `.git`), generated figures (`fig_*.png`, wireframes), videos, logs, intermediate docx/pptx/pdf, large files |
+| Created | `requirements.txt` (venv package versions frozen before deletion), `ASSETS.md` (date, final outputs, deleted items, rebuild steps) |
+
+```bash
+KIT=<skills>/wvs-report/scripts
+python3 $KIT/prune_assets.py "<OUT>/<title>_assets" --dry-run     # list what would be deleted
+python3 $KIT/prune_assets.py "<OUT>/<title>_assets"               # prune (for prd: <Brand>_assets and <Brand>_UI_assets)
+
+# rework / new version — same as the steps in ASSETS.md
+bash $KIT/setup_env.sh "<OUT>/<title>_assets"                      # recreates .venv and installs requirements.txt
+(cd "<OUT>/<title>_assets" && .venv/bin/python figs.py && WVS_KIT=$KIT .venv/bin/python build_report.py --pdf)
+```
+- Safeguards: refuses a folder not named `*_assets` or one without a final docx/pptx beside it (override with `--force`), refuses git repositories, never follows symlinks. Running it again on a pruned folder changes nothing (`ASSETS.md` is kept).
+- In `repos` mode the per-category clones (`<Project>/NN-category/tool/`) are deliverables and are not touched — only `_assets/` is pruned. `prd` never touches the base `deep` report's `_assets/`.
+- `--drop-inputs` also deletes the original inputs. The pruning result (space freed) is one line of the final report.
 
 ---
 
@@ -309,6 +332,8 @@ Old option names (`--review-result`, `--pdf true|false`, `-O`) are still accepte
 | GitHub measurements are slow or fail | `gh auth login` (5,000 requests/hour when authenticated vs. 60 anonymous) |
 | docx → PDF fails | Install LibreOffice: macOS `brew install --cask libreoffice` · Debian `sudo apt-get install -y libreoffice-writer libreoffice-impress` |
 | Broken Korean glyphs in PDF | Install Noto Sans CJK KR or set `WVS_FONT="<font name>"` |
+| Rebuilding a pruned `*_assets` folder | Follow the rebuild steps in `ASSETS.md` — `setup_env.sh <assets>` (installs requirements.txt) → `figs.py` → the build script with `--pdf` (4.6) |
+| `prune_assets.py` refuses (`no final docx/pptx`) | The report is not built yet or its name differs from the assets folder → build first, or pass `--force` if intended |
 | `wvs` on Windows | Use Git Bash/WSL: `bash <skills>/wvs-tools/scripts/wvs …` |
 
 ---
@@ -321,13 +346,13 @@ bin/wise-vibe-skills.mjs         npx installer (install · uninstall · list · 
 .claude-plugin/                  Claude Code plugin and marketplace manifests
 skills/
 ├── wvs-review/   SKILL.md · references/{structure,commercial,guide,code,bulk-stars}.md
-├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/ (docx engine, verification, cloning, wireframes, pptx, research-depth gate, checks) · templates/{repos,deep,prd}/
+├── wvs-report/   SKILL.md · references/{repos,deep,deep-research-spec,host-compat,prd,kit,…}.md · scripts/ (docx engine, verification, cloning, wireframes, pptx, research-depth gate, checks, assets pruning) · templates/{repos,deep,prd}/
 └── wvs-tools/    SKILL.md · references/{pdf,scripts,dist}.md · scripts/wvs · scripts/lib/*.sh
 tests/                           run.sh · validate_skills.py · smoke_kit.py · smoke_deep.py · smoke_research.py · smoke_prd.py · smoke_ui.py
 ```
 
 - **Design**: each `SKILL.md` is a short router (level, mode, task); detailed procedures in `references/` are read only when that part runs, keeping context small.
-- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf), the research-depth gate (shallow research fails, thorough research passes) and a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing). Reuse a venv with `WVS_TEST_PY=<venv python>`.
+- **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf), the research-depth gate (shallow research fails, thorough research passes) a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing) and assets pruning (keep/delete, requirements.txt, ASSETS.md, re-run, refusal). Reuse a venv with `WVS_TEST_PY=<venv python>`.
 - **Kept out of the repo**: `.gitignore` excludes OS files (.DS_Store, Thumbs.db), personal environments (.vscode, .idea, *.code-workspace, .env, .venv), agent sessions and conversation logs (.claude/, .codex/, .gemini/, .cursor/, .omc/, *.jsonl, sessions/), review/report outputs (.review/) and signing material (*.p8, *.keystore, service-account JSON). `.gitattributes` pins LF line endings for shell scripts.
 - **Release**: bump `VERSION`, `package.json`, `.claude-plugin/*.json` and `VERSION` inside `wvs` together → `bash tests/run.sh` → commit → `git tag vX.Y.Z && git push --tags` → (optional) `npm publish`.
 
