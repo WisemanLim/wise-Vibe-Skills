@@ -8,7 +8,7 @@ while [ -L "$SELF" ]; do                      # ~/.local/bin/wvs 같은 심볼�
   t="$(readlink "$SELF")"; case "$t" in /*) SELF="$t" ;; *) SELF="$(dirname "$SELF")/$t" ;; esac
 done
 LIB="$(cd "$(dirname "$SELF")" && pwd)/lib"
-VERSION="0.3.4"
+VERSION="0.3.5"
 
 die() { printf 'wvs: %s\n' "$*" >&2; exit 1; }
 run() { local s="$LIB/$1"; shift; [ -f "$s" ] || die "missing script: $s"; exec bash "$s" "$@"; }

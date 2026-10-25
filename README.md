@@ -9,7 +9,7 @@ Claude Code, Claude Desktop, Codex, Cursor, Gemini CLI, Windsurf, Devin, OpenCod
 | 스킬 | 한 줄 요약 | 호출 예 (Claude Code) |
 |---|---|---|
 | **`wvs-review`** | 저장소 리뷰를 **레벨**로 — L1 구조 분석 · L2 +상용화(라이선스·보안·ISO 5230) · L3 +주니어/구현 가이드 · L4 +라인 단위 코드 리뷰, 스타 목록 일괄 분석 | `/wvs-review ./proj --level 2` |
-| **`wvs-report`** | 보고서·PRD를 **모드**로 — `repos`(클론+Summary-Repos) · `deep`(첨부 이미지·파일(md)·사이트 상세 분석) · `prd`(보고서·요구사항 md·이미지·링크 기반 PRD + 화면설계서) → docx/pdf | `/wvs-report deep` (이미지 첨부) |
+| **`wvs-report`** | 보고서·PRD를 **모드**로 — `repos`(클론+Summary-Repos) · `deep`(첨부 이미지·파일(md)·사이트 상세 분석) · `prd`(보고서·요구사항 md·이미지·링크 기반 PRD + 화면설계서) → docx/pdf · `sess-bak`(세션 히스토리 프로젝트별 md 증분 백업) | `/wvs-report deep` (이미지 첨부) |
 | **`wvs-tools`** | 유틸리티 **단일 CLI** `wvs` — pdf · archive · clean · bookmarks · deploy ios/android · dist · doctor | `wvs pdf REPORT.md` |
 
 ---
@@ -167,6 +167,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | `repos` | 도구 목록 인포그래픽(이미지·링크) | `<root>/<Project>/NN-분류/도구/`(shallow clone) + `Summary-Repos.docx/.pdf` | 전사 → GitHub 매핑(이전 저장소 추적) → 실측(★·SPDX·릴리스·레지스트리) → 클론·트리 → 저장소별 조사 → 비교·선택 가이드·인포그래픽 검증 |
 | `deep` | 첨부 이미지(범주·패키지·개념 도식) · 첨부 파일(md 등) · 첨부 사이트 URL — 하나 이상, 섞어서 (이미지 없이도 동작) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 입력 보존(`prd_intake.py` → `inputs/`·입력 표) → 전사 → **사전 웹 확인**·조사 사양 → 조사(병렬 또는 순차, 정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → **참조 구현 실행(`sample/`)** → (선택 실측 실험) → 도식 판정 종합 — 단계마다 **품질 게이트**(4.5) |
 | `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT 규칙 4.4) | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
+| `sess-bak` | `~/.claude/projects`(Claude Code 세션 jsonl · 서브에이전트 · memory) | `~/.claude/session-history/<name>.md`(프로젝트별) + `INDEX.md` | 새 세션·메시지만 병합(같은 파일은 다시 쓰지 않음, 별도 백업 사본 없음) → 원본이 지워진 세션·memory 보존 → 누락 시 중단 → `--install-hook` 으로 세션 종료 시 자동 실행 (`references/sess-bak.md`) |
 
 ### 4.2 `{ }` 와 `[ ]`
 요청문에서 `{ }` 는 **첨부에서 자동 추출**되는 값(제목·프로젝트명·문서명·범주), `[ ]` 는 **첨부에서 자동 도출**되어 분류·분석 축·장 구성·FR·화면을 이루는 세부 요구다. 직접 값을 주면 그 값이 우선한다.

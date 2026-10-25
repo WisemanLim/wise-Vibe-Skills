@@ -1,9 +1,9 @@
 ---
 name: wvs-report
-description: "보고서·PRD 생성 통합 스킬 — 모드 3종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 이미지·파일(md 등)·사이트의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, <제목>.docx — Miscellaneous-Data 폴더가 있으면 그 안, 없으면 루트, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd). 모두 이전 보고서 양식 docx → PDF, 완료 후 *_assets 는 prune_assets.py 로 재작업 최소 세트(코드·조사 원문·실측 JSON·원본 입력·requirements.txt·ASSETS.md)만 남기고 정리. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD'."
+description: "보고서·PRD 생성 통합 스킬 — 모드 4종: repos(첨부 인포그래픽의 오픈소스를 GitHub 매핑·분류별 clone·디렉토리 구조·사용법·활용분야 요약 Summary-Repos.docx, 구 oss-clone-analysis) · deep(첨부 이미지·파일(md 등)·사이트의 패키지/개념별 정의·소스 repo·설치·사용·동작·활용·확장 상세 분석 + 논문·저장소 검증, <제목>.docx — Miscellaneous-Data 폴더가 있으면 그 안, 없으면 루트, 구 attachment-deep-analysis) · prd(분석 보고서·요구사항/개발방향 문서(md)·첨부 이미지·참고 사이트/GitHub 링크·요청문을 함께 받아 요구 항목(RQ) 추적·마이크로 에이전트·UI/UX·스택·유사 시스템·패키징/릴리스 PRD + 화면설계서 pptx, 구 requirement-based-prd) · sess-bak(Claude Code ~/.claude/projects 세션 히스토리를 프로젝트별 <name>.md 로 증분 백업, 누락·중복 없이, SessionEnd 자동 실행 훅). repos·deep·prd 는 이전 보고서 양식 docx → PDF, 완료 후 *_assets 는 prune_assets.py 로 재작업 최소 세트(코드·조사 원문·실측 JSON·원본 입력·requirements.txt·ASSETS.md)만 남기고 정리. Report/PRD generator. Use for 'Summary-Repos', '첨부 이미지 상세 분석 보고서', '보고서·요구사항 문서 기반 PRD', '세션 히스토리 백업'."
 ---
 
-# wvs-report — 보고서·PRD 생성 (repos · deep · prd)
+# wvs-report — 보고서·PRD 생성 (repos · deep · prd) · 세션 백업 (sess-bak)
 
 Arguments: $ARGUMENTS
 > 호스트가 `$ARGUMENTS` 를 치환하지 않는 에이전트에서는 사용자 요청문에서 모드·인수를 추출한다. 첨부 이미지는 대화의 이미지·경로·URL 모두 허용.
@@ -16,8 +16,10 @@ Arguments: $ARGUMENTS
 | `repos` | 인포그래픽 이미지·링크(도구 목록) | `<root>/<Project>/NN-분류/도구/`(clone) + `Summary-Repos.docx/.pdf` | "clone", "Summary-Repos", 도구 로고 목록 | `references/repos.md` |
 | `deep` | 첨부 이미지(인포그래픽·도식) · 첨부 파일(md 등) · 첨부 사이트 URL (하나 이상, 섞어서) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` — OUT = `<root>/Miscellaneous-Data`(있으면) 또는 `<root>` | "상세 분석", "보고서", 범주·패키지 비교 도식 | `references/deep.md` |
 | `prd` | 다중 입력 — 분석 보고서 docx/pdf(+ `_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지(도식·UI 시안·캡처) · 참고 사이트·GitHub URL · 요청문 (하나 이상, 섞어서) | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` — OUT = `<root>/Need-to-be-organized-into-PRD`(있으면) 또는 `<root>` | "PRD", 요구사항 md·보고서 파일 지정 | `references/prd.md` |
+| `sess-bak` | `~/.claude/projects`(Claude Code 세션 jsonl · 서브에이전트 · memory) | `~/.claude/session-history/<name>.md`(프로젝트별) + `INDEX.md` — 증분 갱신, 별도 백업 사본 없음 | "세션 히스토리", "대화내용 백업", "session history" | `references/sess-bak.md` |
 
 흐름 연결: `deep` 결과(보고서 + `_assets/research`) → `prd` 의 입력. `repos` 결과도 `prd` 기초 자료로 쓸 수 있다.
+`sess-bak` 은 문서 빌드 없이 `scripts/export_history.py` 만 실행한다 — 2·5·6장의 docx/PDF·게이트·자산 정리 규칙은 적용하지 않고 `references/sess-bak.md` 의 누락 검증을 따른다.
 `prd` 는 입력을 먼저 `scripts/prd_intake.py` 로 분류·보존하고 요구사항 문서에서 RQ 를 뽑는다 — 분석 보고서 없이 요구사항 md·이미지·링크만으로도 동작한다.
 
 ## 2. 공통 인수
@@ -64,6 +66,8 @@ Arguments: $ARGUMENTS
 /wvs-report prd "9AI-Concepts-That-Put-You-Ahead-of-99%-in-2026" --github-user WisemanLim
 /wvs-report prd docs/requirements.md ui-mock-1.png ui-mock-2.png https://www.bizinfo.go.kr https://github.com/langgenius/dify
 /wvs-report prd direction.md --links refs.txt --name GovScout                (보고서 없이 요구사항 문서 + 참고 링크)
+/wvs-report sess-bak                                                   (~/.claude/session-history 증분 갱신)
+/wvs-report sess-bak --install-hook                                    (세션 종료 시 자동 실행)
 ```
 
 ## 8. 구 커맨드 대응
