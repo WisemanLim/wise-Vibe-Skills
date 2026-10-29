@@ -169,7 +169,7 @@ Builds docx (house template: US Letter, Apple SD Gothic Neo / Noto CJK, cover, a
 | `repos` | Infographic listing tools (image/link) | `<root>/<Project>/NN-Category/Tool/` (shallow clones) + `Summary-Repos.docx/.pdf` | transcribe → map to GitHub (follows moved repos) → measure (stars, SPDX, releases, registries) → clone + trees → per-repo research → comparison, selection guide, infographic check |
 | `deep` | Attached images (category / package / concept diagrams) · attached files (md etc.) · attached site URLs — one or more, mixed (works without an image) | `OUT/<title>.docx/.pdf` + `<title>_assets/` (OUT rule in 4.4) | preserve inputs (`prd_intake.py` → `inputs/` + input table) → transcribe → **pre-research web check** + research spec → research (parallel or sequential: definition, source repo, install, usage, internals, performance, use cases, extensions) → repo and arXiv verification → **run a reference implementation (`sample/`)** → (optional hands-on experiment) → diagram verdicts — with a **quality gate** at each step (4.5) |
 | `prd` | **Multiple inputs** (4.3) — analysis report docx/pdf (+ `_assets/`) · requirements / direction doc (md) · attached images · reference site / GitHub links · the prompt | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT rule in 4.4) | intake, classification and requirement-item (RQ) extraction → every detailed item → an independently deployable unit (micro-agent) → FRs (`FR-<unit>-NN`, basis = RQ) → similar systems → GitHub stars/repos cross-check → UI/UX wireframes → packaging, release, Agent Manager → traceability gates |
-| `sess-bak` | `~/.claude/projects` (Claude Code session jsonl · subagents · memory) | `~/.claude/session-history/<name>.md` (one per project) + `INDEX.md` | Merge only new sessions/messages (unchanged files are not rewritten, no separate backup copies) → keep sessions/memory whose source was deleted → abort on any loss → `--install-hook` runs it at every session end (`references/sess-bak.md`) |
+| `sess-bak` | Local Claude Code, Codex or Gemini CLI sessions selected with `--agent` | Per-agent `session-history/<name>.md` + `INDEX.md` | Preserve sessions/messages/memory, verify missing records; Claude-only hook installer. [Support and usage](skills/wvs-report/references/sess-bak.md) |
 
 ### 4.2 `{ }` and `[ ]` in prompts
 `{ }` marks values **extracted automatically** from the attachment (title, project name, document name, categories); `[ ]` marks detailed requirements **derived automatically** from it, which shape the classification, analysis axes, chapters, FRs and screens. Values you give explicitly take precedence.
@@ -268,7 +268,7 @@ Use `/wvs-tools <task>` inside an agent or `wvs <task>` in a terminal (after `--
 | Task | Description | Example |
 |---|---|---|
 | `pdf` | `.md` (Mermaid → PNG, pandoc + xelatex, CJK fonts) / `.docx`·`.pptx` (LibreOffice) → PDF with the same name | `wvs pdf REPORT.md -C` · `wvs pdf "A+B.docx"` |
-| `archive` | tar.gz with default excludes, `--split 2048m`, `--remove`, `--dry-run` | `wvs archive -o out.tar.gz ./src ./docs` |
+| `archive` | tar.gz with default excludes, `--split 2048m`, `--remove`, `--dry-run` | `wvs archive -F out.tar.gz ./src` |
 | `clean` | Remove `.DS_Store`, `__pycache__`, `Thumbs.db` …, custom patterns `-D/-F/-E` | `wvs clean . --dry-run` |
 | `bookmarks` | De-duplicate Chrome bookmarks (per folder/global, URL normalization, `.bak` with `--in-place`) | `wvs bookmarks -i Bookmarks --dry-run` |
 | `deploy ios` | Xcode archive → TestFlight upload, build number +1 | `wvs deploy ios ./app` |
@@ -276,7 +276,7 @@ Use `/wvs-tools <task>` inside an agent or `wvs <task>` in a terminal (after `--
 | `dist` | Service bootstrap (repo sync, Docker, compose, Makefile) — TUI, `--cli`, `--no-run`, old version via `--classic` | `wvs dist -I "<url1> <url2>" --cli` |
 | `doctor` · `list` · `help <task>` | Tool check · task ↔ script map · original script help | `wvs help archive` |
 
-For deletions, uploads and overwrites the skill shows a `--dry-run` first and asks before running. Credentials (`.deploy-*.env`, `*.p8`, service-account JSON) are excluded by `.gitignore`.
+Inspect targets and changes before deletions, uploads and overwrites. Only `clean`, `archive` and `bookmarks` offer `--dry-run`; deployment has no dry-run, and `dist --no-run` can still synchronize repositories and generate files. Credentials (`.deploy-*.env`, `*.p8`, service-account JSON) are excluded by `.gitignore`.
 
 ---
 
@@ -353,6 +353,7 @@ tests/                           run.sh · validate_skills.py · smoke_kit.py ·
 ```
 
 - **Design**: each `SKILL.md` is a short router (level, mode, task); detailed procedures in `references/` are read only when that part runs, keeping context small.
+- **Validation scope**: [Results and unverified behavior](tests/VALIDATION.md). Installer routing does not imply native session-format support or end-to-end validation in each agent. New regression suites: `tests/test_history.py`, `tests/test_tools.py`, `tests/test_hosts.py`.
 - **Tests**: `bash tests/run.sh` — metadata, syntax, shellcheck, bash/npx destination parity, install / v0.1 cleanup / uninstall, bin link, zip, `wvs` dispatch, a report-toolkit smoke build (docx/pptx/pdf), the research-depth gate (shallow research fails, thorough research passes) a PRD multi-input smoke test (input classification, RQ tracing, gates passing/failing) and assets pruning (keep/delete, requirements.txt, ASSETS.md, re-run, refusal). Reuse a venv with `WVS_TEST_PY=<venv python>`.
 - **Kept out of the repo**: `.gitignore` excludes OS files (.DS_Store, Thumbs.db), personal environments (.vscode, .idea, *.code-workspace, .env, .venv), agent sessions and conversation logs (.claude/, .codex/, .gemini/, .cursor/, .omc/, *.jsonl, sessions/), review/report outputs (.review/) and signing material (*.p8, *.keystore, service-account JSON). `.gitattributes` pins LF line endings for shell scripts.
 - **Release**: bump `VERSION`, `package.json`, `.claude-plugin/*.json` and `VERSION` inside `wvs` together → `bash tests/run.sh` → commit → `git tag vX.Y.Z && git push --tags` → (optional) `npm publish`.

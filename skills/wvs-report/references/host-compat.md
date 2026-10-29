@@ -3,6 +3,8 @@
 > Claude Code · Claude Desktop · Codex · Cursor · Gemini CLI · Windsurf · Devin · OpenCode · Antigravity · GitHub Copilot CLI · Command Code · Grok Build · OMP · VS Code 공통.
 > 보고서 품질은 모델 성실도가 아니라 **게이트 스크립트**로 보장한다. 이 문서는 `deep` 모드 기준이며 `repos`·`prd` 조사 단계에도 같은 원칙을 쓴다.
 
+이 규약은 호스트별 실행 지침이며 모든 실제 에이전트에서의 검증 완료를 뜻하지 않는다. 설치 경로, 로컬 스크립트, 실제 호스트 도구 호출을 구분해 검증한다. `sess-bak`는 이 문서가 아니라 `references/sess-bak.md`의 에이전트별 지원 표를 따른다.
+
 ## 1. 왜 호스트마다 품질이 달라지는가 (실측)
 같은 입력(AWS Well-Architected Agent · Azure Data Engineering 인포그래픽)을 두 호스트로 만든 결과:
 

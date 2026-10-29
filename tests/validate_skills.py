@@ -17,9 +17,14 @@ for name in sorted(os.listdir(ROOT)):
     if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name) or len(name) > 64: bad.append(f"{name}: invalid skill name")
     d = fm.get("description", "")
     if not (1 <= len(d) <= 1024): bad.append(f"{name}: description length {len(d)}")
-    for ref in re.findall(r"`((?:scripts|templates|references)/[\w./-]+\.(?:py|sh|md))`", s):
-        if not os.path.exists(os.path.join(ROOT, name, ref)):
-            bad.append(f"{name}: missing bundled file {ref}")
+    if '<' in d or '>' in d: bad.append(f"{name}: description contains angle brackets")
+    for directory, _, files in os.walk(os.path.join(ROOT, name)):
+        for filename in files:
+            if not filename.endswith('.md'): continue
+            markdown = open(os.path.join(directory, filename), encoding='utf-8').read()
+            for ref in re.findall(r"`((?:scripts|templates|references)/[\w./-]+\.(?:py|sh|md))`", markdown):
+                if not os.path.exists(os.path.join(ROOT, name, ref)):
+                    bad.append(f"{name}/{filename}: missing bundled file {ref}")
     print(f"ok  {name:32s} desc {len(d):4d} chars")
 if bad:
     print("\n".join("FAIL " + b for b in bad)); sys.exit(1)

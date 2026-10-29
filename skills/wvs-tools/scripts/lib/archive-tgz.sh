@@ -338,13 +338,11 @@ install_gtar_linux() {
     run_with_sudo apk add tar
   fi
 
-  if command_exists gtar; then
+  if command_exists gtar || { command_exists tar && tar --version 2>/dev/null | head -1 | grep -q 'GNU tar'; }; then
     return 0
   fi
 
-  # Some distros provide GNU tar only as "tar"; if gtar is required, fall back
-  # to Homebrew's gnu-tar which installs the gtar binary.
-  warn "gtar not present after native install; trying Homebrew gnu-tar."
+  warn "GNU tar not present after native install; trying Homebrew gnu-tar."
   install_homebrew || { err "Homebrew installation failed."; return 1; }
   brew install gnu-tar || { err "brew install gnu-tar failed."; return 1; }
   command_exists gtar
@@ -358,6 +356,13 @@ ensure_tar() {
 
   if command_exists gtar; then
     TAR_CMD="gtar"
+    return 0
+  fi
+
+  # Linux distributions normally expose GNU tar as `tar`, not `gtar`.
+  # Reuse it instead of installing packages or Homebrew unnecessarily.
+  if command_exists tar && tar --version 2>/dev/null | head -1 | grep -q 'GNU tar'; then
+    TAR_CMD="tar"
     return 0
   fi
 
@@ -382,7 +387,11 @@ ensure_tar() {
     TAR_CMD="gtar"
     return 0
   fi
-  err "gtar is not available after installation."
+  if command_exists tar && tar --version 2>/dev/null | head -1 | grep -q 'GNU tar'; then
+    TAR_CMD="tar"
+    return 0
+  fi
+  err "GNU tar is not available after installation."
   return 1
 }
 

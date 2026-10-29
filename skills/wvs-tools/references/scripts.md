@@ -71,7 +71,7 @@ macOS / Linux (Debian·Fedora/RHEL·Arch) 를 기본 지원합니다.
 
 ```bash
 ./archive-tgz.sh [OPTIONS] <파일/디렉터리...>
-./archive-tgz.sh -o output.tar.gz ./src ./docs
+./archive-tgz.sh -F output.tar.gz ./src
 ./archive-tgz.sh --split 2048m ./large-dir   # 2GB 단위 분할
 ./archive-tgz.sh --dry-run ./project          # 실제 압축 없이 목록만 확인
 ```

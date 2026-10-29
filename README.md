@@ -167,7 +167,7 @@ curl -fsSL https://raw.githubusercontent.com/WisemanLim/wise-Vibe-Skills/main/in
 | `repos` | 도구 목록 인포그래픽(이미지·링크) | `<root>/<Project>/NN-분류/도구/`(shallow clone) + `Summary-Repos.docx/.pdf` | 전사 → GitHub 매핑(이전 저장소 추적) → 실측(★·SPDX·릴리스·레지스트리) → 클론·트리 → 저장소별 조사 → 비교·선택 가이드·인포그래픽 검증 |
 | `deep` | 첨부 이미지(범주·패키지·개념 도식) · 첨부 파일(md 등) · 첨부 사이트 URL — 하나 이상, 섞어서 (이미지 없이도 동작) | `OUT/<제목>.docx/.pdf` + `<제목>_assets/` (OUT 규칙 4.4) | 입력 보존(`prd_intake.py` → `inputs/`·입력 표) → 전사 → **사전 웹 확인**·조사 사양 → 조사(병렬 또는 순차, 정의·소스 repo·설치·사용·동작·성능·활용·확장) → 저장소·arXiv 검증 → **참조 구현 실행(`sample/`)** → (선택 실측 실험) → 도식 판정 종합 — 단계마다 **품질 게이트**(4.5) |
 | `prd` | **다중 입력**(4.3) — 분석 보고서 docx/pdf(+`_assets/`) · 요구사항/개발방향 문서 md · 첨부 이미지 · 참고 사이트/GitHub 링크 · 요청문 | `OUT/<Brand>_<Phrase>_PRD.docx/.pdf` + `<Brand>_UI_Design.pptx/.pdf` (OUT 규칙 4.4) | 입력 수집·분류·요구 항목(RQ) 추출 → 세부 항목 = 독립 배포 단위(마이크로 에이전트) → FR(`FR-<단위>-NN`, 근거 = RQ) → 유사 시스템 → GitHub stars/repos 교차 → UI/UX 와이어프레임 → 패키징·릴리스·Agent Manager → 누락 게이트 |
-| `sess-bak` | `~/.claude/projects`(Claude Code 세션 jsonl · 서브에이전트 · memory) | `~/.claude/session-history/<name>.md`(프로젝트별) + `INDEX.md` | 새 세션·메시지만 병합(같은 파일은 다시 쓰지 않음, 별도 백업 사본 없음) → 원본이 지워진 세션·memory 보존 → 누락 시 중단 → `--install-hook` 으로 세션 종료 시 자동 실행 (`references/sess-bak.md`) |
+| `sess-bak` | Claude Code·Codex·Gemini CLI의 로컬 세션 (`--agent`로 선택) | 에이전트별 `session-history/<name>.md` + `INDEX.md` | 세션·메시지·메모리 보존 병합, 누락 검사, Claude 전용 훅. [지원 범위·사용법](skills/wvs-report/references/sess-bak.md) |
 
 ### 4.2 `{ }` 와 `[ ]`
 요청문에서 `{ }` 는 **첨부에서 자동 추출**되는 값(제목·프로젝트명·문서명·범주), `[ ]` 는 **첨부에서 자동 도출**되어 분류·분석 축·장 구성·FR·화면을 이루는 세부 요구다. 직접 값을 주면 그 값이 우선한다.
@@ -266,7 +266,7 @@ bash $KIT/setup_env.sh "<OUT>/<제목>_assets"                      # .venv 재�
 | 작업 | 설명 | 예 |
 |---|---|---|
 | `pdf` | `.md`(Mermaid → PNG 렌더, pandoc + xelatex, 한글 글꼴) / `.docx`·`.pptx`(LibreOffice) → 같은 이름 PDF | `wvs pdf REPORT.md -C` · `wvs pdf "A+B.docx"` |
-| `archive` | tar.gz 생성 — 기본 제외 규칙, `--split 2048m`, `--remove`, `--dry-run` | `wvs archive -o out.tar.gz ./src ./docs` |
+| `archive` | tar.gz 생성 — 기본 제외 규칙, `--split 2048m`, `--remove`, `--dry-run` | `wvs archive -F out.tar.gz ./src` |
 | `clean` | `.DS_Store`·`__pycache__`·`Thumbs.db` 등 정리, 사용자 패턴 `-D/-F/-E` | `wvs clean . --dry-run` |
 | `bookmarks` | Chrome 북마크 중복 제거(폴더/전역, URL 정규화, `--in-place` 시 .bak) | `wvs bookmarks -i Bookmarks --dry-run` |
 | `deploy ios` | Xcode archive → TestFlight 업로드, 빌드 번호 자동 +1 | `wvs deploy ios ./app` |
@@ -274,7 +274,7 @@ bash $KIT/setup_env.sh "<OUT>/<제목>_assets"                      # .venv 재�
 | `dist` | 표준 서비스 배포 부트스트랩(저장소 동기화·Docker·compose·Makefile) — TUI, `--cli`, `--no-run`, 구 판 `--classic` | `wvs dist -I "<url1> <url2>" --cli` |
 | `doctor` · `list` · `help <작업>` | 도구 점검 · 작업↔스크립트 · 원본 스크립트 도움말 | `wvs help archive` |
 
-삭제·업로드·덮어쓰기 작업은 스킬이 먼저 `--dry-run` 결과를 보여 주고 확인을 받는다. 자격증명(`.deploy-*.env`, `*.p8`, 서비스 계정 JSON)은 `.gitignore` 로 커밋을 막는다.
+삭제·업로드·덮어쓰기는 대상과 변경 내용을 먼저 확인한다. `clean`·`archive`·`bookmarks`는 `--dry-run`을 제공한다. `deploy`에는 dry-run이 없고 `dist --no-run`도 동기화·파일 생성을 할 수 있으므로 이를 무변경 미리보기로 취급하지 않는다. 자격증명(`.deploy-*.env`, `*.p8`, 서비스 계정 JSON)은 `.gitignore` 로 커밋을 막는다.
 
 ---
 
@@ -351,6 +351,8 @@ tests/                           run.sh · validate_skills.py · smoke_kit.py ·
 ```
 
 - **설계**: `SKILL.md` 는 짧은 라우터(레벨·모드·작업 선택)이고, 세부 절차는 해당 파트를 실행할 때만 `references/` 에서 읽는다(필요한 만큼만 컨텍스트 사용).
+- **검증 범위**: [기능별 검증 결과와 미검증 항목](tests/VALIDATION.md). 스킬 설치 경로 지원은 에이전트별 세션 포맷 지원 또는 실제 호스트 실행 검증을 의미하지 않는다.
+- **추가 회귀 테스트**: `python3 -B tests/test_history.py` · `python3 -B tests/test_tools.py` · `python3 -B tests/test_hosts.py` — 세션 보존·훅, 파일 작업, 14개 클라이언트의 user/project 경로 비교.
 - **테스트**: `bash tests/run.sh` — 메타데이터·문법·shellcheck·설치기 bash/npx 경로 동일성·설치/구 버전 정리/제거·bin 링크·zip·`wvs` 디스패치·보고서 툴킷 스모크 빌드(docx/pptx/pdf)·조사 깊이 게이트(얕은 조사 FAIL·충실한 조사 PASS)·PRD 다중 입력 스모크(입력 분류·RQ 추적·게이트 통과/실패)·자산 정리(유지/삭제·requirements.txt·ASSETS.md·재실행·거부). `WVS_TEST_PY=<venv python>` 으로 venv 재사용.
 - **업로드 제외**: `.gitignore` 가 OS 파일(.DS_Store·Thumbs.db), 개인 개발 환경(.vscode·.idea·*.code-workspace·.env·.venv), 에이전트 세션·대화 기록(.claude/·.codex/·.gemini/·.cursor/·.omc/·*.jsonl·sessions/), 리뷰/보고서 산출물(.review/), 서명·자격증명(*.p8·*.keystore·서비스 계정 JSON)을 제외한다. `.gitattributes` 로 셸 스크립트 LF 를 고정한다.
 - **릴리스**: `VERSION` · `package.json` · `.claude-plugin/*.json` · `wvs` 의 `VERSION` 을 함께 올림 → `bash tests/run.sh` → 커밋 → `git tag vX.Y.Z && git push --tags` → (선택) `npm publish`.

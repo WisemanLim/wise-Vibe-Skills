@@ -65,6 +65,16 @@ task="${1:-help}"; [ $# -gt 0 ] && shift
 case "$task" in
   pdf)
     [ $# -ge 1 ] || die "usage: wvs pdf <file.md|file.docx|file.pptx> [-C]"
+    # Normalize the advertised explicit-input forms before detecting extension.
+    normalized=()
+    for a in "$@"; do
+      case "$a" in
+        --input=*) normalized+=(-I "${a#*=}") ;;
+        --input) normalized+=(-I) ;;
+        *) normalized+=("$a") ;;
+      esac
+    done
+    set -- "${normalized[@]}"
     in=""; for a in "$@"; do case "$a" in -*) ;; *) in="$a"; break ;; esac; done
     case "${in##*.}" in
       md|markdown) has_i=false; for a in "$@"; do case "$a" in -I|--input|--input=*) has_i=true ;; esac; done

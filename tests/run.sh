@@ -13,6 +13,9 @@ node --check bin/wise-vibe-skills.mjs && pass "node syntax" || fail "node syntax
 python3 -c "import ast,sys; [ast.parse(open(f, encoding='utf-8').read(), f) for f in sys.argv[1:]]" \
   skills/*/scripts/*.py skills/*/templates/*/*.py skills/*/templates/*/ui/*.py skills/*/templates/*/ui/pptx/*.py tests/*.py && pass "python syntax" || fail "python syntax"
 cmp -s skills/wvs-report/scripts/docx2pdf.sh skills/wvs-tools/scripts/lib/docx2pdf.sh && pass "docx2pdf.sh copies identical" || fail "docx2pdf.sh copies identical"
+python3 -B tests/test_history.py && pass "session export adapters, incremental preservation, hooks and locking" || fail "session export adapters, incremental preservation, hooks and locking"
+python3 -B tests/test_tools.py && pass "wvs file operations and PDF argument forwarding" || fail "wvs file operations and PDF argument forwarding"
+python3 -B tests/test_hosts.py && pass "14 client installer routes (user/project) and bundled adapter" || fail "14 client installer routes (user/project) and bundled adapter"
 
 H="$(mktemp -d)"; trap 'rm -rf "$H"' EXIT
 mkdir -p "$H/.claude" "$H/.codex"
